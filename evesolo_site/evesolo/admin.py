@@ -1,4 +1,5 @@
-from evesolo.models import Player, Pilot, Solokill,Hullclass,CCPID,Ship
+from models import Player, Pilot, Solokill,Hullclass,CCPID,Ship
+#from evesolo.models import Player, Pilot, Solokill,Hullclass,CCPID,Ship
 from django.contrib import admin
 admin.site.register(Player)
 admin.site.register(Pilot)

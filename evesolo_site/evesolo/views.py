@@ -1,7 +1,10 @@
 from django.http import HttpResponse,HttpResponseRedirect
 from django.shortcuts import render_to_response
-from evesolo.models import Solokill, Pilot, Player, Ship, Hullclass, Leaderboard, Leaderboardallowedparticipants
-from evesolo.models import Leaderboardallowedships,Leaderboardallowedsystems, Leaderboardinvites
+from models import Solokill, Pilot, Player, Ship, Hullclass, Leaderboard, Leaderboardallowedparticipants
+from models import Leaderboardallowedships,Leaderboardallowedsystems, Leaderboardinvites
+
+#from evesolo.models import Solokill, Pilot, Player, Ship, Hullclass, Leaderboard, Leaderboardallowedparticipants
+#from evesolo.models import Leaderboardallowedships,Leaderboardallowedsystems, Leaderboardinvites
 
 from django.template import RequestContext
 from django.core.urlresolvers import reverse

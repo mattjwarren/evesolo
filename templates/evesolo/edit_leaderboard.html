@@ -1,0 +1,59 @@
+{% extends "evesolo/base.html" %}
+{% block content %}
+<h1>Edit Leaderboard</h1>
+<form action="/player/board_action/" method="post">
+{% csrf_token %}
+    <table>
+	<tr>
+		<td><label for="id_leaderboard_player_name">Managing Player</label></td>
+		<td><select name="leaderboard_player_name" id="id_leaderboard_player_name">
+			<option value="{{leaderboard.player.name}}">{{leaderboard.player.name}}</option>
+			{% for player,pilots in players %}
+			<option value="{{player.name}}">{{player.name}}</option>
+			{% endfor %}
+			</select>
+		</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td><label for="id_leaderboard_name">Leaderboard Name:</label></td>
+		<td><input type="text" name="leaderboard_name" value="{{leaderboard.name}}" id="id_leaderboard_name" /></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td><label for="id_leaderboard_ranks">Ranks Displayed:</label></td>
+		<td><input type="text" name="leaderboard_ranks" value="{{leaderboard.ranks}}" id="id_leaderboard_ranks" /></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td><label for="id_leaderboard_style">Ranking Method:</label></td>
+		<td><select name="leaderboard_rank_style" id="id_leaderboard_style">
+			<option value="{{leaderboard.rank_style}}">{{leaderboard.rank_style}}</option>
+			<option value="Points">Points</option>
+			<option value="Kills">Kills</option>
+			</select>
+		</td>
+		<td></td>
+	</tr>
+
+	<tr>
+		<td><label for="id_leaderboard_max_participants">Max Participants:</label></td>
+		<td><input type="text" name="leaderboard_max_participants" value="{{leaderboard.max_participants}}" id="id_leaderboard_max_participants" /></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td><label for="id_leaderboard_description">Description:</label></td>
+		<td><textarea rows="8" cols="64" name="leaderboard_description" id="id_leaderboard_description"">
+			{{leaderboard.description}}
+			</textarea>
+		</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td><button type="submit" name="Update" value="{{leaderboard.id}}" class="default">Update</button></td>
+		<td></td>
+	</tr>
+	</table>
+</form>
+{% endblock content %}

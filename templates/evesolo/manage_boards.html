@@ -1,0 +1,138 @@
+{% extends "evesolo/base.html" %}
+{% block content %}
+<h1>User Boards</h1>
+</br>
+<h4>Joined Leaderboards</h4>
+{% if pilots_boards %}
+<form action="/pilot/leave_board/" method="post">
+{% csrf_token %}
+	<div class="leaderboardpanel">
+		<div class="leaderboardpanelinner">
+			<table class="leaderboardpaneltable">
+				<tr class="boardheader">
+					<td>Pilot Name</td>
+					<td>Leaderboard</td>
+					<td>Owner</td>
+					<td>Ranks</td>
+					<td>Ranking Method</td>
+					<td>Max Participants</td>
+					<td>Description</td></tr>
+				{% for pilot,leaderboards in pilots_boards %}
+				<tr id="tr_light">
+					<td class="leaderboard">{{pilot.name}}</td><td></td><td></td><td></td><td></td><td></td><td></td>
+				</tr>
+					{% for leaderboard in leaderboards %}
+					<tr id="tr_dark">
+						<td class="leaderboard"><center><button type="submit" name="resigning_board_id_pilot_id" value="{{leaderboard.id}}:{{pilot.id}}" class="default" />Resign</button>
+												</center>
+						</td>
+						<td class="leaderboard"><a href="/leaderboards_custom/{{leaderboard.id}}/">{{leaderboard.name}}</a></td>
+						<td class="leaderboard">{{leaderboard.player.name}}</td>
+						<td class="leaderboard">{{leaderboard.ranks}}</td>
+						<td class="leaderboard">{{leaderboard.rank_style}}</td>
+						<td class="leaderboard">{{leaderboard.max_participants}}</td>
+						<td class="leaderboard">{{leaderboard.description}}</td>
+					</tr>
+					{% endfor %}
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+</form>
+{% else %}
+No participating pilots.</br>
+{% endif %}
+</br>
+<h4>Leaderboards Available</h4>
+{% if eligible_leaderboards %}
+<form action="/pilot/join_board/" method="post">
+{% csrf_token %}
+	<div class="leaderboardpanel">
+		<div class="leaderboardpanelinner">
+			<table class="leaderboardpaneltable">
+				<tr class="boardheader">
+					<td>
+						<select name="joining_pilot_name" id="id_joining_pilot_name">
+						{% for pilot in pilots %}
+							<option value="{{pilot.name}}">{{pilot.name}}</option>
+						{% endfor %}
+						</select>
+					</td>
+					<td>Leaderboard</td>
+					<td>Owner</td>
+					<td>Ranks</td>
+					<td>Ranking Method</td>
+					<td>Max Participants</td>
+					<td>Description</td>
+				</tr>
+				{% for id,name,ranks,max_participants,rank_style,owner,desc in eligible_leaderboards %}
+				<tr id="tr_dark">
+					<td class="leaderboard"><center><button type="submit" name="joining_board_id" value="{{id}}" class="default" />Join</button>
+					</center></td>
+					<td class="leaderboard"><a href="/leaderboards_custom/{{id}}/">{{name}}</a></td>
+					<td class="leaderboard">{{owner}}</td>
+					<td class="leaderboard">{{ranks}}</td>
+					<td class="leaderboard">{{rank_style}}</td>
+					<td class="leaderboard">{{max_participants}}</td>
+					<td class="leaderboard">{{desc}}</td>
+				</tr>
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+</form>
+{% else %}
+No leaderboards available.</br>
+{% endif %}
+</br>
+<form action="/player/board_action/" method="post">
+	{% csrf_token %}
+	<h4>Player Managed Leaderboards</h4>
+	<ul>
+		<li><a href="/leaderboards/add/">Add Leaderboard</a>
+		</br>
+		</li>
+	</ul>
+	{% if player_managed_leaderboards %}
+	<div class="leaderboardpanel">
+		<div class="leaderboardpanelinner">
+			<table class="leaderboardpaneltable">
+				<tr class="boardheader">
+					<td>Player Name</td>
+					<td>Leaderboard</td>
+					<td>Owner</td>
+					<td>Ranks</td>
+					<td>Ranking Method</td>
+					<td>Max Participants</td>
+					<td>Description</td>
+				</tr>
+				{% for player,leaderboards in player_managed_leaderboards %}
+				<tr id="tr_light">
+					<td class="leaderboard">{{player.name}}</td><td></td><td></td><td></td><td></td><td></td><td></td>
+				</tr>
+					{% for leaderboard in leaderboards %}
+					<tr id="tr_dark">
+						<td class="leaderboard"><center>
+							<button type="submit" name="Remove" value="{{leaderboard.id}}" class="default" />X</button>
+							<button type="submit" name="Edit" value="{{leaderboard.id}}" class="default" />Edit</button>	
+												</center>
+						</td>
+						<td class="leaderboard"><a href="/leaderboards_custom/{{leaderboard.id}}/">{{leaderboard.name}}</a></td>
+						<td class="leaderboard">{{leaderboard.player.name}}</td>
+						<td class="leaderboard">{{leaderboard.ranks}}</td>
+						<td class="leaderboard">{{leaderboard.rank_style}}</td>
+						<td class="leaderboard">{{leaderboard.max_participants}}</td>
+						<td class="leaderboard">{{leaderboard.description}}</td>
+					</tr>
+					{% endfor %}
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+</form>
+{% else %}
+No leaderboards available</br>
+{% endif %}
+{% endblock content %}
+			
+	

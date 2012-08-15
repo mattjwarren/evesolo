@@ -1,0 +1,34 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+		<meta name="keywords" content="eve-online" />
+		<meta name="description" content="" />
+		<link href="/static/evesolo_style.css" rel="stylesheet" type="text/css" media="screen" />
+<title>EVE Solo</title>
+</head>
+
+<body>
+<a name="page-top"></a>
+<div id="container">
+	<div id="header">
+		{% include "evesolo/header.html" %}
+	</div>
+	<div id="navigation">
+		{% include "evesolo/navbar.html" %}
+	</div>
+	<div id="content-container">
+		<div id="content">
+			{% if error %}
+			{% include "evesolo/error_message.html" %}
+			{% endif %}
+			{% if message %}
+			{% include "evesolo/message.html" %}
+			{% endif %}
+			{% block content %}
+			There is no content</br>
+			{% endblock %}
+		</div>
+	</div>
+</div>
+</body>
+</html>

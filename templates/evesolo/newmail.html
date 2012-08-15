@@ -1,0 +1,9 @@
+{% extends "evesolo/base.html" %}
+{% block content %}
+<h1>Post a new mail</h1>
+<form action="/postmail/" method="post">
+	{% csrf_token %}
+	<textarea rows="16" cols="64" name="killtext">Paste killmail here</textarea>
+	<input type="submit" value="Post">
+</form>
+{% endblock content %}

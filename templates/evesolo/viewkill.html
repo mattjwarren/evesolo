@@ -1,0 +1,34 @@
+{% extends "evesolo/base.html" %}
+{% block content %}
+{% if kill %}
+<h1>Kill details</h1>
+<ul>
+	<li> Date: {{kill.kill_date}}</li>
+	<li> {{kill.verified}}</li>
+</ul>
+<center><h2>Winner, {{kill.winning_pilot.name}} for {{kill.points_awarded}} points.</h2></center>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+			<tr id="tr_light">
+				<td class="leaderboard" width="33%"><center><h3><a href="/pilot/{{kill.winning_pilot.id}}/">{{kill.winning_pilot}}</a></h3></center></td>
+				<td class="leaderboard" width="33%"></td>
+				<td class="leaderboard" width="33%"><center><h3><a href="/pilot/{{kill.losing_pilot.id}}/">{{kill.losing_pilot}}</a></h3></center></td>
+			</tr>
+			<tr id="tr_dark">
+				<td class="leaderboard"><center><img src="http://image.eveonline.com/Render/{{kill.winners_ship.CCPID.ccp_id}}_64.png"/></center></td>
+				<td class="leaderboard"><center><a href="/leaderboards_class/{{kill.winners_ship.hull_class.id}}/">{{kill.winners_ship.hull_class.human_name}}</a> ({{kill.winners_ship.hull_class.fwp_value}} point)
+						<h3>VS</h3>
+						<a href="/leaderboards_class/{{kill.losers_ship.hull_class.id}}/">{{kill.losers_ship.hull_class.human_name}}</a> ({{kill.losers_ship.hull_class.fwp_value}} point)</center></td>
+				<td class="leaderboard"><center><img src="http://image.eveonline.com/Render/{{kill.losers_ship.CCPID.ccp_id}}_64.png"/></center></td>
+			</tr>
+			<tr id="tr_light">
+				<td class="leaderboard"><center><h3><a href="/leaderboards_ship/{{kill.winners_ship.id}}/">{{kill.winners_ship.name}}</a></h3></center></td>
+				<td class="leaderboard"></td>
+				<td class="leaderboard"><center><h3><a href="/leaderboards_ship/{{kill.losers_ship.id}}/">{{kill.losers_ship.name}}</a></h3></center></td>
+			</tr>
+		</table>
+	</div>
+</div>
+{% endif %}
+{% endblock content %}

@@ -1,0 +1,283 @@
+TABLE:hullclass
+IND,0
+UC,0
+FT1,1
+FF,2
+FT2,3
+DT1,4
+DT2,5
+CT1,6
+FC,7
+CT2,9
+CT3,12
+BCT1,15
+BCT2,20
+BCT3,25
+BS,30
+FBS,35
+CAP,140
+SCAP,560
+TABLE:ship
+Capsule,rookie ships,UC
+Apotheosis,shuttles,UC
+Goru's shuttle,shuttles,UC
+Guristas shuttle,shuttles,UC
+Interbus shuttle,shuttles,UC
+Zephyr,shuttles,UC
+Amarr shuttle,shuttles,UC
+Caldari shuttle,shuttles,UC
+Gallente shuttle,shuttles,UC
+Minmatar shuttle,shuttles,UC
+Impairor,rookie ships,UC
+Ibis,rookie ships,UC
+Velator,rookie ships,UC
+Reaper,rookie ships,UC
+Crucifier,frigates,FT1
+Executioner,frigates,FT1
+Inquisitor,frigates,FT1
+Magnate,frigates,FT1
+Punisher,frigates,FT1
+Tormentor,frigates,FT1
+Bantam,frigates,FT1
+Condor,frigates,FT1
+Griffin,frigates,FT1
+Heron,frigates,FT1
+Kestrel,frigates,FT1
+Merlin,frigates,FT1
+Atron,frigates,FT1
+Imicus,frigates,FT1
+Incursus,frigates,FT1
+Maulus,frigates,FT1
+Navitas,frigates,FT1
+Tristan,frigates,FT1
+Breacher,frigates,FT1
+Burst,frigates,FT1
+Probe,frigates,FT1
+Rifter,frigates,FT1
+Slasher,frigates,FT1
+Vigil,frigates,FT1
+Imperial Navy Slicer,faction frigates,FF
+Caldari Navy Hookbill,faction frigates,FF
+Federation navy comet,faction frigates,FF
+Republic fleet firetail,faction frigates,FF
+Cruor,faction frigates,FF
+Daredevil,faction frigates,FF
+Dramiel,faction frigates,FF
+Succubus,faction frigates,FF
+Worm,faction frigates,FF
+Echelon,faction frigates,FF
+Freki,faction frigates,FF
+Gold magnate,faction frigates,FF
+Polaris Centurion TEST,faction frigates,FF
+Polaris Inspector frigate,faction frigates,FF
+Polaris Legatus Frigate,faction frigates,FF
+Silver magnate,faction frigates,FF
+Coercer,destroyers,DT1
+Cormorant,destroyers,DT1
+Catalyst,destroyers,DT1
+Thrasher,destroyers,DT1
+Arbitrator,cruisers,CT1
+Augoror,cruisers,CT1
+Maller,cruisers,CT1
+Omen,cruisers,CT1
+Blackbird,cruisers,CT1
+Caracal,cruisers,CT1
+Moa,cruisers,CT1
+Osprey,cruisers,CT1
+Celestis,cruisers,CT1
+Exequror,cruisers,CT1
+Thorax,cruisers,CT1
+Vexor,cruisers,CT1
+Bellicose,cruisers,CT1
+Rupture,cruisers,CT1
+Scythe,cruisers,CT1
+Stabber,cruisers,CT1
+Augoror navy issue,faction cruisers,FC
+Omen navy issue,faction cruisers,FC
+Caracal navy issue,faction cruisers,FC
+Osprey navy issue,faction cruisers,FC
+Exequror navy issue,faction cruisers,FC
+Vexor navy issue,faction cruisers,FC
+Scythe fleet issue,faction cruisers,FC
+Stabber fleet issue,faction cruisers,FC
+Ashimmu,faction cruisers,FC
+Cynabal,faction cruisers,FC
+Gila,faction cruisers,FC
+Phantasm,faction cruisers,FC
+Vigilant,faction cruisers,FC
+Guardian-vexor,faction cruisers,FC
+Opux Luxury Yacht,faction cruisers,FC
+Harbinger,battlecruisers,BCT1
+Prophecy,battlecruisers,BCT1
+Drake,battlecruisers,BCT1
+Ferox,battlecruisers,BCT1
+Brutix,battlecruisers,BCT1
+Myrmidon,battlecruisers,BCT1
+Cyclone,battlecruisers,BCT1
+Hurricane,battlecruisers,BCT1
+Abaddon,battleships,BS
+Apocalypse,battleships,BS
+Armageddon,battleships,BS
+Raven,battleships,BS
+Rokh,battleships,BS
+Scorpion,battleships,BS
+Dominix,battleships,BS
+Hyperion,battleships,BS
+Megathron,battleships,BS
+Maelstrom,battleships,BS
+Tempest,battleships,BS
+Typhoon,battleships,BS
+Apocalypse imperial issue,faction battleships,FBS
+Apocalypse navy issue,faction battleships,FBS
+Armageddon imperial issue,faction battleships,FBS
+Armageddon navy issue,faction battleships,FBS
+Raven navy issue,faction battleships,FBS
+Raven state issue,faction battleships,FBS
+Scorpion navy issue,faction battleships,FBS
+Dominix navy issue,faction battleships,FBS
+Megathron federate issue,faction battleships,FBS
+Megathron navy issue,faction battleships,FBS
+Tempest fleet issue,faction battleships,FBS
+Tempest tribal issue,faction battleships,FBS
+Bhaalgorn,faction battleships,FBS
+Machariel,faction battleships,FBS
+Nightmare,faction battleships,FBS
+Rattlesnake,faction battleships,FBS
+Vindicator,faction battleships,FBS
+Retribution,assault ships,FT2
+Vengeance,assault ships,FT2
+Harpy,assault ships,FT2
+Hawk,assault ships,FT2
+Enyo,assault ships,FT2
+Ishkur,assault ships,FT2
+Jaguar,assault ships,FT2
+Wolf,assault ships,FT2
+Utu,assault ships,FT2
+Paladin,marauders,FBS
+Golem,marauders,FBS
+Kronos,marauders,FBS
+Vargur,marauders,FBS
+Redeemer,black ops,FBS
+Widow,black ops,FBS
+Sin,black ops,FBS
+Panther,black ops,FBS
+Sentinel,electronic attack ships,FT2
+Kitsune,electronic attack ships,FT2
+Keres,electronic attack ships,FT2
+Hyena,electronic attack ships,FT2
+Anathema,covert ops,FT1
+Purifier,covert ops,FT2
+Buzzard,covert ops,FT1
+Manticore,covert ops,FT2
+Helios,covert ops,FT1
+Nemesis,covert ops,FT2
+Cheetah,covert ops,FT1
+Hound,covert ops,FT2
+Crusader,interceptors,FT2
+Malediction,interceptors,FT2
+Crow,interceptors,FT2
+Raptor,interceptors,FT2
+Ares,interceptors,FT2
+Taranis,interceptors,FT2
+Claw,interceptors,FT2
+Stiletto,interceptors,FT2
+Heretic,interdictors,DT2
+Flycatcher,interdictors,DT2
+Eris,interdictors,DT2
+Sabre,interdictors,DT2
+Devoter,heavy interdictors,CT2
+Onyx,heavy interdictors,CT2
+Phobos,heavy interdictors,CT2
+Broadsword,heavy interdictors,CT2
+Sacrilege,heavy assault ships,CT2
+Zealot,heavy assault ships,CT2
+Cerberus,heavy assault ships,CT2
+Eagle,heavy assault ships,CT2
+Deimos,heavy assault ships,CT2
+Ishtar,heavy assault ships,CT2
+Muninn,heavy assault ships,CT2
+Vagabond,heavy assault ships,CT2
+Adrestia,heavy assault ships,CT2
+Mimir,heavy assault ships,CT2
+Curse,recon ships,CT2
+Pilgrim,recon ships,CT2
+Falcon,recon ships,CT2
+Rook,recon ships,CT2
+Arazu,recon ships,CT2
+Lachesis,recon ships,CT2
+Huginn,recon ships,CT2
+Rapier,recon ships,CT2
+Absolution,command ships,BCT2
+Damnation,command ships,BCT2
+Nighthawk,command ships,BCT2
+Vulture,command ships,BCT2
+Astarte,command ships,BCT2
+Eos,command ships,BCT2
+Claymore,command ships,BCT2
+Sleipnir,command ships,BCT2
+Legion,strategic cruisers,CT3
+Tengu,strategic cruisers,CT3
+Proteus,strategic cruisers,CT3
+Loki,strategic cruisers,CT3
+Oracle,advanced battlecruisers,BCT3
+Naga,advanced battlecruisers,BCT3
+Talos,advanced battlecruisers,BCT3
+Tornado,advanced battlecruisers,BCT3
+Archon,carriers,CAP
+Chimera,carriers,CAP
+Thanatos,carriers,CAP
+Nidhoggur,carriers,CAP
+Revelation,dreadnoughts,CAP
+Phoenix,dreadnoughts,CAP
+Moros,dreadnoughts,CAP
+Naglfar,dreadnoughts,CAP
+Aeon,supercarriers,SCAP
+Wyvern,supercarriers,SCAP
+Nyx,supercarriers,SCAP
+Hel,supercarriers,SCAP
+Avatar,titans,SCAP
+Leviathan,titans,SCAP
+Erebus,titans,SCAP
+Ragnarok,titans,SCAP
+Bestower,industrials,IND
+Sigil,industrials,IND
+Badger,industrials,IND
+Badger mark II,industrials,IND
+Iteron,industrials,IND
+Iteron mark II,industrials,IND
+Iteron mark III,industrials,IND
+Iteron mark IV,industrials,IND
+Iteron mark V,industrials,IND
+Hoarder,industrials,IND
+Mammoth,industrials,IND
+Wreathe,industrials,IND
+noctis,industrials,IND
+Primae,industrials,IND
+Providence,freighters,IND
+Charon,freighters,IND
+Obelisk,freighters,IND
+Fenrir,freighters,IND
+Ark,jump freighters,IND
+Rhea,jump freighters,IND
+Anshar,jump freighters,IND
+Nomad,jump freighters,IND
+Impel,transport ships,IND
+Bustard,transport ships,IND
+Occator,transport ships,IND
+Mastodon,transport ships,IND
+Prorator,blockade runners,IND
+Crane,blockade runners,IND
+Viator,blockade runners,IND
+Prowler,blockade runners,IND
+Guardian,logistics,CT2
+Basilisk,logistics,CT2
+Oneiros,logistics,CT2
+Scimitar,logistics,CT2
+Orca,industrial command ship,IND
+Covetor,mining barge,IND
+Procurer,mining barge,IND
+Retriever,mining barge,IND
+Hulk,exhumers,IND
+Mackinaw,exhumers,IND
+Skiff,exhumers,IND
+Rorqual,capital industrial ships,CAP

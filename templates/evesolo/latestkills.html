@@ -1,0 +1,86 @@
+{% extends "evesolo/base.html" %}
+{% block content %}
+<h1>Latest Activity</h1>
+<h2>Latest Kills</h2>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+			<tr class="boardheader"><td>Victor</td><td>Ship Flown</td><td>Victim</td><td>Ship Flown</td><td>Kill Class</td><td>Points</td><td>Date</td><td>Verified?</td><td></td></tr>
+			{% for kill in latest_kills %}
+			<tr id="{% cycle 'tr_light' 'tr_dark' %}">
+				<td class="leaderboard"><a href="/pilot/{{kill.winning_pilot.id}}/">{{kill.winning_pilot.name}}</a></td>
+				<td class="leaderboard">
+					<table>
+						<tr>
+							<td><img src="http://image.eveonline.com/Render/{{kill.winners_ship.CCPID.ccp_id}}_32.png"></img></td>
+							<td><a href="/leaderboards_ship/{{kill.winners_ship.id}}/">{{kill.winners_ship.name}}</a></td>
+						</tr>
+					</table>
+				</td>
+				<td class="leaderboard"><a href="/pilot/{{kill.losing_pilot.id}}/">{{kill.losing_pilot.name}}</a></td>
+				<td class="leaderboard">
+					<table>
+						<tr>
+							<td><img src="http://image.eveonline.com/Render/{{kill.losers_ship.CCPID.ccp_id}}_32.png"></img></td>
+							<td><a href="/leaderboards_ship/{{kill.losers_ship.id}}/">{{kill.losers_ship.name}}</a></td>
+						</tr>
+					</table>
+				</td>
+				<td class="leaderboard"><a href="/leaderboards_class/{{kill.winners_ship.hull_class.id}}/">{{kill.winners_ship.hull_class.human_name}}</a></td>
+				<td class="leaderboard">{{kill.points_awarded}}</td>
+				<td class="leaderboard">{{kill.kill_date|date:"j-n-Y H:i"}}</td>
+				{% if kill.verified %}
+				<td class="leaderboard">Yes</td>
+				{% else %}
+				<td class="leaderboard">No</td>
+				{% endif %}
+				<td class="leaderboard"><a href="/kills/{{kill.id}}/">View</a></td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+</div>
+<h2>Recently Submitted</h2>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+			<tr class="boardheader"><td>Victor</td><td>Ship Flown</td><td>Victim</td><td>Ship Flown</td><td>Kill Class</td><td>Points</td><td>Date</td><td>Verified?</td><td></td></tr>
+			{% for kill in latest_submitted_kills %}
+			<tr id="{% cycle 'tr_light' 'tr_dark' %}">
+				<td class="leaderboard"><a href="/pilot/{{kill.winning_pilot.id}}/">{{kill.winning_pilot.name}}</a></td>
+				<td class="leaderboard">
+					<table>
+						<tr>
+							<td><img src="http://image.eveonline.com/Render/{{kill.winners_ship.CCPID.ccp_id}}_32.png"></img></td>
+							<td><a href="/leaderboards_ship/{{kill.winners_ship.id}}/">{{kill.winners_ship.name}}</a></td>
+						</tr>
+					</table>
+				</td>
+				<td class="leaderboard"><a href="/pilot/{{kill.losing_pilot.id}}/">{{kill.losing_pilot.name}}</a></td>
+				<td class="leaderboard">
+					<table>
+						<tr>
+							<td><img src="http://image.eveonline.com/Render/{{kill.losers_ship.CCPID.ccp_id}}_32.png"></img></td>
+							<td><a href="/leaderboards_ship/{{kill.losers_ship.id}}/">{{kill.losers_ship.name}}</a></td>
+						</tr>
+					</table>
+				</td>
+				<td class="leaderboard"><a href="/leaderboards_class/{{kill.winners_ship.hull_class.id}}/">{{kill.winners_ship.hull_class.human_name}}</a></td>
+				<td class="leaderboard">{{kill.points_awarded}}</td>
+				<td class="leaderboard">{{kill.kill_date|date:"j-n-Y H:i"}}</td>
+				{% if kill.verified %}
+				<td class="leaderboard">Yes</td>
+				{% else %}
+				<td class="leaderboard">No</td>
+				{% endif %}
+				<td class="leaderboard"><a href="/kills/{{kill.id}}/">View</a></td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+</div>
+<div id="footer">
+Any EVE related graphics, logos or other material that are the property of CCP Games hf are used with limited permission of CCP Games hf. No official affiliation or endorsement by CCP Games hf is stated or implied.
+</div>
+
+{% endblock content %}

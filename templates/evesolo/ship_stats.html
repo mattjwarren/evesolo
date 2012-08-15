@@ -1,0 +1,50 @@
+{% extends "evesolo/base.html" %}
+{% block content %}
+<h1>Ship Stats</h1>
+Note: counts exclude 0 point kills, and ratios exclude ships with less than 10 kills or losses</br>
+</br>
+Skip to class:-</br>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+		{% for texts_links in nav_set %}
+		<tr id="{% cycle 'tr_light' 'tr_dark' %}">
+			{% for text,link in texts_links %}
+			<td class="leaderboard" width="20%"><a href="#{{link}}">{{text}}</a></td>
+			{% endfor %}
+		</tr>
+		{% endfor %}
+		</table>
+	</div>
+</div>
+			
+{% for hullclass,class_rank_set in rank_sets %}
+	{% for title,rowset,column in class_rank_set %} 
+<a name="{{hullclass}}"></a>
+<h3>{{hullclass}}: {{title}}</h3>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+			<tr class="boardheader">
+				<td class="leaderboard" width="33%">Ship</td>
+				<td class="leaderboard" width="33%">Name</td>
+				<td class="leaderboard" width="33%">{{column}}</td>
+			</tr>
+			{% for id,name,sid,value in rowset %}
+			<tr id="{% cycle 'tr_light' 'tr_dark' %}">
+				<td class="leaderboard" width="33%"><img src="http://image.eveonline.com/Render/{{id}}_32.png"/></td>
+				<td class="leaderboard" width="33%"><a href="/leaderboards_ship/{{sid}}/">{{name}}</a></td>
+				<td class="leaderboard" width="33%">{{value}}</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+</div>
+<div style="text-align:right"><a href="#page-top">Back to index</></div>
+	{% endfor %}
+{% endfor %}
+
+
+
+
+{% endblock content %}

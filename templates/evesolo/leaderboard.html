@@ -1,0 +1,35 @@
+{% extends "evesolo/base.html" %}
+{% block content %}
+{% if rank_sets %}
+	{% if header_title %}
+	<h1>{{header_title}}</h1>
+		{% else %}{% if html_title %}
+		{{html_title|safe}}
+		{% endif %}
+	{% endif %}
+	{% if verified %}
+	<h2>Verified kills only</h2>
+	{{unverified_link|safe}}
+	{% else %}
+	<h2>All kills</h2>
+	{{verified_link|safe}}
+	{% endif %}
+	{% for rank_set in rank_sets %}
+	<h3>{{rank_set.0}}</h3>
+	<div class="leaderboardpanel">
+		<div class="leaderboardpanelinner">
+			<table class="leaderboardpaneltable">
+				<tr class="boardheader"><td width="33%">Rank</td><td width="33%">Pilot</td><td width="33%">Points</td></tr>
+				{% for pid,name,points in rank_set.1 %}
+				<tr id="{% cycle 'tr_light' 'tr_dark' %}">
+					<td class="leaderboard">{{forloop.counter}}</td>
+					<td class="leaderboard"><a href="/pilot/{{pid}}/">{{name}}</a></td>
+					<td class="leaderboard">{{points}}</td>
+				</tr>
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+	{% endfor %}
+{% endif %}
+{% endblock content %}    

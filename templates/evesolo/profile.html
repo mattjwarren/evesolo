@@ -1,0 +1,49 @@
+{% extends "evesolo/base.html" %}
+{% block content %}
+<h1>User Profile</h1>
+User: {{user.username}} (<a href="/accounts/change_password/">Change password</a>)
+<h4>Players and Pilots</h4>
+<ul>
+	<li><a href="/accounts/add_player/">Add Player</a> | <a href="/accounts/add_pilot/">Add Pilot To Player</a> | 
+	<a href="/accounts/remove_player/">Remove Player</a> | <a href="/accounts/remove_pilot/">Remove Pilot From Player</a>
+	
+	</br>
+	</li>
+</ul>
+{% if players %}
+<form action="/pilot/pullmails/" method="post">
+{% csrf_token %}
+	<div class="leaderboardpanel">
+		<div class="leaderboardpanelinner">
+			<table class="leaderboardpaneltable">
+				<tr class="boardheader"><td>Player Name</td><td>Pilot</td><td>ID</td><td>vCode</td><td>Valid?</td></tr>
+				{% for player,pilots,leaderboards in players %}
+				<tr id="tr_light">
+					<td class="leaderboard">{{player.name}}</td><td></td><td></td><td></td><td></td>
+				</tr>
+					{% for pilot,ok in pilots %}
+					<tr id="tr_dark">
+						<td class="leaderboard"><center>
+							<button type="submit" name="pilot_id" value="{{pilot.id}}" class="default" />Pull</button>
+												</center>
+						</td>
+						<td class="leaderboard"><a href="/pilot/{{pilot.id}}/">{{pilot.name}}</a></td>
+						<td class="leaderboard">{{pilot.vCode_id}}</td>
+						<td class="leaderboard">{{pilot.vCode}}</td>
+						<td class="leaderboard">{{ok}}</td>
+					</tr>
+					{% endfor %}
+				{% endfor %}
+			</table>
+		</div>
+		</br>
+		Please note, CCP only lets pull requests occurr once per hour and only returns the most recent 25 kills.
+		If you pull more frequently than once per hour evesolo will use the results from the last successful pull.
+	</div>
+</form>
+{% else %}
+No players registered</br>
+{% endif %}
+{% endblock content %}
+			
+	

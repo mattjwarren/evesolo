@@ -1,0 +1,33 @@
+{% extends "evesolo/base.html" %}
+{% block content %}
+{% if form.errors %}
+<div id="error_message">Login failed. Please try again.</br></div></br>
+{% endif %}
+<h1>Login</h1>
+
+<form method="post" action="{% url django.contrib.auth.views.login %}">
+{% csrf_token %}
+<table>
+<tr>
+    <td>{{ form.username.label_tag }}</td>
+    <td>{{ form.username }}</td>
+</tr>
+<tr>
+    <td>{{ form.password.label_tag }}</td>
+    <td>{{ form.password }}</td>
+</tr>
+<tr>
+	<td></td>
+	<td><input type="submit" name="submit" value="login" /></td>
+</tr>
+</table>
+<input type="hidden" name="next" value="{{ next }}" />
+</form>
+<ul>
+	<li><a href="/accounts/password_reset/">Forgotten your password?</a></li>
+	<li>If you have forgotten your username, take the above link and you will be reminded in the confirmation email.</li>
+</ul>
+
+
+{% endblock %}
+

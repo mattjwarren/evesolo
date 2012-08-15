@@ -1,0 +1,200 @@
+{% extends "evesolo/base.html" %}
+{% block content %}
+{% if pilot %}
+<h1>All Time All Class Summary For Pilot</h1>
+<ul>
+	<li><h2>{{pilot.name}}</h2></li>
+</ul>
+<h3>All-Class Rankings</h3>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+			<tr class="boardheader">
+				<td class="leaderboard" colspan="2">
+					All Time
+				</td>
+				<td class="leaderbaord" colspan="2">
+					Weekly
+				</td>
+				<td class="leaderbaord" colspan="2">
+					Monthly
+				</td>
+				<td class="leaderbaord" colspan="2">
+					Quarterly
+				</td>
+				<td class="leaderbaord" colspan="2">
+					Half-Yearly
+				</td>
+				<td class="leaderbaord" colspan="2">
+					Yearly
+				</td>
+			</tr>
+			<tr class="boardheader">
+				<td class="leaderboard">Rank</td>
+				<td></td>
+				<td>Current</td>
+				<td>Prev</td>
+				<td>Current</td>
+				<td>Prev</td>
+				<td>Current</td>
+				<td>Prev</td>
+				<td>Current</td>
+				<td>Prev</td>
+				<td>Current</td>
+				<td>Prev</td>
+			</tr>
+			<tr id="tr_light">
+				<td class="leaderboard" colspan="2">{{rank}}</td>
+				<td class="{% if past_week_rank < ppast_week_rank %}leaderboard_up{% endif %}
+						   {% if past_week_rank > ppast_week_rank %}leaderboard_down{% endif %}
+						   {% if past_week_rank == ppast_week_rank %}leaderboard{% endif %}
+						   {% if past_week_rank == "N/A" %}leaderboard_down{% endif %}
+							">{{past_week_rank}}</td>
+				<td class="leaderboard">{{ppast_week_rank}}</td>
+				<td class="{% if past_month_rank < ppast_month_rank %}leaderboard_up{% endif %}
+						   {% if past_month_rank > ppast_month_rank %}leaderboard_down{% endif %}
+						   {% if past_month_rank == ppast_month_rank %}leaderboard{% endif %}
+						   {% if past_month_rank == "N/A" %}leaderboard_down{% endif %}
+							">{{past_month_rank}}</td>
+				<td class="leaderboard">{{ppast_month_rank}}</td>
+				<td class="{% if past_quarter_rank < ppast_quarter_rank %}leaderboard_up{% endif %}
+						   {% if past_quarter_rank > ppast_quarter_rank %}leaderboard_down{% endif %}
+						   {% if past_quarter_rank == ppast_quarter_rank %}leaderboard{% endif %}
+						   {% if past_quarter_rank == "N/A" %}leaderboard_down{% endif %}
+							">{{past_quarter_rank}}</td>
+				<td class="leaderboard">{{ppast_quarter_rank}}</td>
+				<td class="{% if past_half_year_rank < ppast_half_year_rank %}leaderboard_up{% endif %}
+						   {% if past_half_year_rank > ppast_half_year_rank %}leaderboard_down{% endif %}
+						   {% if past_half_year_rank == ppast_half_year_rank %}leaderboard{% endif %}
+						   {% if past_half_year_rank == "N/A" %}leaderboard_down{% endif %}
+							">{{past_half_year_rank}}</td>
+				<td class="leaderboard">{{ppast_half_year_rank}}</td>
+				<td class="{% if past_year_rank < ppast_year_rank %}leaderboard_up{% endif %}
+						   {% if past_year_rank > ppast_year_rank %}leaderboard_down{% endif %}
+						   {% if past_year_rank == ppast_year_rank %}leaderboard{% endif %}
+						   {% if past_year_rank == "N/A" %}leaderboard_down{% endif %}
+							">{{past_year_rank}}</td>
+				<td class="leaderboard">{{ppast_year_rank}}</td>
+			</tr>
+		</table>
+	</div>
+</div>
+<h3>Overview</h3>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+			<tr id="tr_light">
+				<td class="leaderboard">Points</td>
+				<td class="leaderboard"><table class="leaderboardpaneltable">
+						<tr>
+							<td class="leaderboard" width="33%"></td>
+							<td class="leaderboard" width="33%">{{points}}</td>
+							<td class="leaderboard" width="33%"></td>
+						</tr>
+					</table></td>
+			</tr>
+			<tr id="tr_dark">
+				<td class="leaderboard">Wins - Losses</td>
+				<td class="leaderboard">
+					<table class="leaderboardpaneltable">
+						<tr>
+							<td class="leaderboard" width="33%"></td>
+							<td class="leaderboard" width="33%">{{winloss}}</td>
+							<td class="leaderboard" width="33%"></td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+			<tr id="tr_light">
+				<td class="leaderboard">Most Wins In Class</td>
+				<td class="leaderboard">
+					<table class="leaderboardpaneltable">
+						<tr>
+							<td class="leaderboard" width="33%">{% if bestclassid != 0 %}<a href="/leaderboards_class/{{bestclassid}}/">{{bestclass}}</a>
+																{% else %}{{bestclass}}{% endif %}</td>
+							<td class="leaderboard" width="33%">{{bestclasswins}} wins</td>
+							<td class="leaderboard" width="33%">{{bestclasswinspoints}} points</td>
+						</tr>
+					</table>				
+				</td>
+			</tr>
+			<tr id="tr_dark">
+				<td class="leaderboard">Most Wins With Ship</td>
+				<td class="leaderboard">
+					<table class="leaderboardpaneltable">
+						<tr>
+							<td class="leaderboard" width="33%">{% if bestshipid != 0 %}<a href="/leaderboards_ship/{{bestshipid}}/">{{bestship}}</a>
+																{% else %}{{bestship}}{% endif %}</td>
+							<td class="leaderboard" width="33%">{{bestshipwins}} wins</td>
+							<td class="leaderboard" width="33%">{{bestshipwinspoints}} points</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+	</div>
+</div>
+
+<h3>Favourite Ships (wins & losses)</h3>
+
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+			<tr class="boardheader">
+				<td class="leaderboard" width="33%">Ship</td>
+				<td class="leaderboard" width="33%">Name</td>
+				<td class="leaderboard" width="33%">Seen in # fights</td>
+			</tr>
+			{% for ccpid,name,count,shipid in most_seen_ships %}
+			<tr id="{% cycle 'tr_light' 'tr_dark' %}">
+				<td class="leaderboard" width="33%"><img src="http://image.eveonline.com/Render/{{ccpid}}_32.png"/></td>
+				<td class="leaderboard" width="33%"><a href="/leaderboards_ship/{{shipid}}/">{{name}}</a></td>
+				<td class="leaderboard" width="33%">{{count}}</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+</div>
+				
+<h3>Latest Fights</h3>
+
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+			<tr class="boardheader"><td>Victor</td><td>Ship Flown</td><td>Victim</td><td>Ship Flown</td><td>Kill Class</td><td>Points</td><td>Date</td><td>Verified?</td><td></td></tr>
+			{% for kill in latest_kills %}
+			<tr id="{% cycle 'tr_light' 'tr_dark' %}">
+				<td class="leaderboard"><a href="/pilot/{{kill.winning_pilot.id}}/">{{kill.winning_pilot.name}}</a></td>
+				<td class="leaderboard">
+					<table>
+						<tr>
+							<td><img src="http://image.eveonline.com/Render/{{kill.winners_ship.CCPID.ccp_id}}_32.png"></img></td>
+							<td><a href="/leaderboards_ship/{{kill.winners_ship.id}}/">{{kill.winners_ship.name}}</a></td>
+						</tr>
+					</table>
+				</td>
+				<td class="leaderboard"><a href="/pilot/{{kill.losing_pilot.id}}/">{{kill.losing_pilot.name}}</a></td>
+				<td class="leaderboard">
+					<table>
+						<tr>
+							<td><img src="http://image.eveonline.com/Render/{{kill.losers_ship.CCPID.ccp_id}}_32.png"></img></td>
+							<td><a href="/leaderboards_ship/{{kill.losers_ship.id}}/">{{kill.losers_ship.name}}</a></td>
+						</tr>
+					</table>
+				</td>
+				<td class="leaderboard"><a href="/leaderboards_class/{{kill.winners_ship.hull_class.id}}/">{{kill.winners_ship.hull_class.human_name}}</a></td>
+				<td class="leaderboard">{{kill.points_awarded}}</td>
+				<td class="leaderboard">{{kill.kill_date|date:"j-n-Y H:i"}}</td>
+				{% if kill.verified %}
+				<td class="leaderboard">Yes</td>
+				{% else %}
+				<td class="leaderboard">No</td>
+				{% endif %}
+				<td class="leaderboard"><a href="/kills/{{kill.id}}/">View</a></td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+</div>
+{% endif %}
+{% endblock content %}

@@ -1,0 +1,45 @@
+{% extends "evesolo/base.html" %}
+{% block content %}
+<h1>Add Leaderboard</h1>
+<form action="/leaderboards/add/" method="post">
+{% csrf_token %}
+    <table>
+	<tr>
+		<td><label for="id_leaderboard_player_name">Managing Player</label></td>
+		<td><select name="leaderboard_player_name" id="id_leaderboard_player_name">
+			{% for player in players %}
+			<option value="{{player.name}}">{{player.name}}</option>
+			{% endfor %}
+			</select></td>
+	</tr>
+	<tr>
+		<td><label for="id_leaderboard_name">Leaderboard Name:</label></td>
+		<td><input type="text" name="leaderboard_name" id="id_leaderboard_name" /></td>
+	</tr>
+	<tr>
+		<td><label for="id_leaderboard_ranks">Ranks Displayed:</label></td>
+		<td><input type="text" name="leaderboard_ranks" id="id_leaderboard_ranks" /></td>
+	</tr>
+	<tr>
+		<td><label for="id_leaderboard_style">Ranking Method:</label></td>
+		<td><select name="leaderboard_style" id="id_leaderboard_style">
+			<option value="Points">Points</option>
+			<option value="Kills">Kills</option>
+			</select></td>
+	</tr>
+	<tr>
+		<td><label for="id_leaderboard_max_participants">Max Participants:</label></td>
+		<td><input type="text" name="leaderboard_max_participants" id="id_leaderboard_max_participants" /></td>
+	</tr>
+	<tr>
+		<td><label for="id_leaderboard_description">Description:</label></td>
+		<td><textarea rows="8" cols="64" name="leaderboard_description" id="id_leaderboard_description">
+			</textarea></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td><input type="submit" value="Add Leaderboard" class="default" /></td>
+	</tr>
+	</table>
+</form>
+{% endblock content %}

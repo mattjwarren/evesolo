@@ -52,8 +52,19 @@
 	<tr>
 		<td></td>
 		<td><button type="submit" name="Update" value="{{leaderboard.id}}" class="default">Update</button></td>
-		<td></td>
+		<td>
+		</td>
 	</tr>
+	</form>
+	<form action="/player/board_action/" method="post">
+	{% csrf_token %}
+		<tr>
+			<td></td>
+			<td><button type="submit" name="Remove" value="{{leaderboard.id}}" class="default" />Delete</button></td>
+			<td>
+			</td>
+		</tr>	
+	</form>
 	</table>
-</form>
+
 {% endblock content %}

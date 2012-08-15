@@ -1,7 +1,7 @@
 from django.http import HttpResponse,HttpResponseRedirect
 from django.shortcuts import render_to_response
 from models import Solokill, Pilot, Player, Ship, Hullclass, Leaderboard, Leaderboardallowedparticipants
-from models import Leaderboardallowedships,Leaderboardallowedsystems, Leaderboardinvites
+from models import Leaderboardallowedships,Leaderboardallowedsystems, Leaderboardinvites,Leaderboardkills
 
 #from evesolo.models import Solokill, Pilot, Player, Ship, Hullclass, Leaderboard, Leaderboardallowedparticipants
 #from evesolo.models import Leaderboardallowedships,Leaderboardallowedsystems, Leaderboardinvites
@@ -40,18 +40,6 @@ class APIKeyNotForPilot(Exception):
 	
 #from django import forms
 #from django.widgets import Textarea
-
-	
-#
-#678457
-#nycXAAMsR4Ov18uW6YYLqpWM906SoQG5ubMm7GNOQd4XqyJD9znHR2zZchEBXrqz
-#674243
-#spotBi6YoW4WsxDXihhQuyofZfIDpfThbv61ITKoLyJHwc0SBMeP0YLFp2GjoMOH
-#
-
-
-# Create your views here.
-
 	
 class EmptyObject(object):
 	pass
@@ -393,7 +381,6 @@ def join_board(request):
 	#otherwise, flip back to profile screen
 	if (not request.method=='POST'):
 		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='No POST.'
 		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))		
 	
 	joining_pilot_name=''
@@ -1564,6 +1551,112 @@ def ship_stats(request):
 							'nav_set':nav_set},
 							context_instance=RequestContext(request))
 	
+
+def get_manage_kills_context(request):
+	now=datetime.now()
+	interval_sixweeks=datetime.date(now-timedelta(days=360))#42
+
+	manage_kills_context={}
+	#Player pilots
+	pilots=Pilot.objects.filter(player__user=request.user)
+	if len(pilots)==0:
+		pilots=None
+	manage_kills_context['pilots']=pilots
 	
+	#winning_kills
+	kill_list=Solokill.objects.filter(winning_pilot__player__user=request.user,kill_date__gt=interval_sixweeks).order_by('-kill_date')
+	#kill_list=Solokill.objects.all() ##
+	manage_kills_context['kill_list']=kill_list
 	
+	#leadrboards
+	leaderboards=[]
+	for pilot in pilots:
+		pilot_accepted_invites=Leaderboardinvites.objects.filter(pilot=pilot,status='ACCEPTED')
+		leaderboards+=[invite.leaderboard for invite in pilot_accepted_invites]
+	manage_kills_context['leaderboards']=list(set(leaderboards))
+	return manage_kills_context
+		
+
+@login_required
+def manage_kills(request):
+	context=get_manage_kills_context(request)
+	if request.method!='POST':
+		return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
 	
+		
+	#Find out what function triggered the POST
+	if ('pilot_filter' in request.POST) and (request.POST['pilot_filter']):
+		if request.POST['filter_by_pilot']=='ALL':
+			return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
+		
+		try:
+			filter_by_pilot_id=int(request.POST['filter_by_pilot'])
+		except ValueError:
+			
+			context['error']='Unknown pilot.'
+			return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
+		try:
+			filter_by_pilot=Pilot.objects.get(id=filter_by_pilot_id)
+		except Pilot.DoesNotExist:
+			context['error']='Unknown pilot.'
+			return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
+		kill_list=context['kill_list']
+		context['kill_list']=[kill for kill in kill_list if kill.winning_pilot==filter_by_pilot]
+		return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
+	
+	elif ('enter_kills' in request.POST) and (request.POST['enter_kills']):
+		if not 'solokills_to_add' in request.POST:
+			return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
+		
+		solokills_to_add=request.POST.getlist('solokills_to_add')
+		if not solokills_to_add:
+			return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
+		
+		if not 'enter_into_leaderboard' in request.POST:
+			return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
+		
+		try:
+			board_to_enter_id=int(request.POST['enter_into_leaderboard'])
+		except ValueError:
+			return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
+		
+		try:
+			board_to_enter=Leaderboard.objects.get(id=board_to_enter_id)
+		except Leaderboard.DoesNotExist:
+			context['error']='Board not found'
+			return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
+		
+		if board_to_enter not in context['leaderboards']:
+			context['error']='Board not found'
+			return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
+		
+		added_count=0
+		for solokill_id in solokills_to_add:
+			try:
+				solokill_id=int(solokill_id)
+				solokill=Solokill.objects.get(id=solokill_id)
+			except Solokill.DoesNotExist:
+				continue
+			
+			pilot_to_add=solokill.winning_pilot
+					
+			pilot_invite=Leaderboardinvites.objects.filter(leaderboard=board_to_enter,pilot=pilot_to_add,status="ACCEPTED").count()
+			if pilot_invite==0:
+				continue
+			try:
+				Leaderboardkills.objects.get(leaderboard=board_to_enter,solokill=solokill)
+			except Leaderboardkills.DoesNotExist:
+				leaderboard_kill=Leaderboardkills(leaderboard=board_to_enter,solokill=solokill)
+				save_object(leaderboard_kill,request)
+				added_count+=1
+		if added_count==0:
+			context['error']='No new leaderboard entries were made.'
+		else:
+			context['message']='%d of %d entries made.' % (added_count,len(solokills_to_add))
+		return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
+
+	return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
+
+		 
+		 
+		 

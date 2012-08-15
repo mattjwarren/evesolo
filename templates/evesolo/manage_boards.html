@@ -112,10 +112,9 @@ No leaderboards available.</br>
 				</tr>
 					{% for leaderboard in leaderboards %}
 					<tr id="tr_dark">
-						<td class="leaderboard"><center>
-							<button type="submit" name="Remove" value="{{leaderboard.id}}" class="default" />X</button>
+						<td class="leaderboard">
 							<button type="submit" name="Edit" value="{{leaderboard.id}}" class="default" />Edit</button>	
-												</center>
+												
 						</td>
 						<td class="leaderboard"><a href="/leaderboards_custom/{{leaderboard.id}}/">{{leaderboard.name}}</a></td>
 						<td class="leaderboard">{{leaderboard.player.name}}</td>

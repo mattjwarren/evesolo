@@ -63,6 +63,8 @@ urlpatterns = patterns('',
 									{'post_change_redirect':'/accounts/profile/',
 									'template_name':'evesolo/change_password.html'}),
 	url(r'^accounts/manage_boards/$','evesolo.views.manage_boards'),
+	url(r'^accounts/manage_kills/$','evesolo.views.manage_kills'),
+	
 
 	#COMMENT THIS OUT IN PRODUCTION								
 	#url(r'^admin/$', include(admin.site.urls)),

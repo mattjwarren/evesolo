@@ -6,6 +6,27 @@ sql_all_class_ranking='''select evesolo_pilot.id,evesolo_pilot.name,sum(evesolo_
 		order by s desc
 		limit 10'''
 
+sql_all_class_ranking_custom_points='''select evesolo_pilot.id,evesolo_pilot.name,sum(evesolo_solokill.points_awarded) as s from evesolo_pilot
+		inner join evesolo_solokill on evesolo_solokill.winning_pilot_id=evesolo_pilot.id
+		inner join evesolo_leaderboardkills on evesolo_solokill.id=evesolo_leaderboardkills.solokill_id
+		where evesolo_leaderboardkills.leaderboard_id=%d
+		and evesolo_solokill.kill_date>'%s'
+		and evesolo_solokill.points_awarded>0.0
+		group by evesolo_pilot.id,evesolo_pilot.name
+		order by s desc
+		limit 10'''
+
+sql_all_class_ranking_custom_kills='''select evesolo_pilot.id,evesolo_pilot.name,count(evesolo_pilot.name) as s from evesolo_pilot
+		inner join evesolo_solokill on evesolo_solokill.winning_pilot_id=evesolo_pilot.id
+		inner join evesolo_leaderboardkills on evesolo_solokill.id=evesolo_leaderboardkills.solokill_id
+		where evesolo_leaderboardkills.leaderboard_id=%d		
+		and evesolo_solokill.kill_date>'%s'
+		and evesolo_solokill.points_awarded>0.0
+		group by evesolo_pilot.id,evesolo_pilot.name
+		order by s desc
+		limit 10'''
+
+
 sql_all_class_ranking_nolimit='''select evesolo_pilot.id,evesolo_pilot.name,sum(evesolo_solokill.points_awarded) as s from evesolo_pilot
 		inner join evesolo_solokill on evesolo_solokill.winning_pilot_id=evesolo_pilot.id
 		where evesolo_solokill.kill_date>'%s'

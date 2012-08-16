@@ -13,6 +13,7 @@
 			<button type="submit" name="pilot_filter" value="filter">Filter</button>
 	</ul>
 <h4>Solo Wins over the past six weeks</h4>
+	{% if kill_list %}
 	<div class="leaderboardpanel">
 		<div class="leaderboardpanelinner">
 			<table class="leaderboardpaneltable">
@@ -67,5 +68,8 @@
 			</table>
 		</div>
 	</div>
+	{% else %}
+	No kills available.
+	{% endif %}
 </form>
 {% endblock content %}

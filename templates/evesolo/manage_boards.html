@@ -1,8 +1,8 @@
 {% extends "evesolo/base.html" %}
 {% block content %}
-<h1>User Boards</h1>
+<h1>Your Boards</h1>
 </br>
-<h4>Joined Leaderboards</h4>
+<h4>Pilots in Boards</h4>
 {% if pilots_boards %}
 <form action="/pilot/leave_board/" method="post">
 {% csrf_token %}
@@ -14,8 +14,8 @@
 					<td>Leaderboard</td>
 					<td>Owner</td>
 					<td>Ranks</td>
-					<td>Ranking Method</td>
-					<td>Max Participants</td>
+					<td>Rank Method</td>
+					<td>Pilots</td>
 					<td>Description</td></tr>
 				{% for pilot,leaderboards in pilots_boards %}
 				<tr id="tr_light">
@@ -30,7 +30,7 @@
 						<td class="leaderboard">{{leaderboard.player.name}}</td>
 						<td class="leaderboard">{{leaderboard.ranks}}</td>
 						<td class="leaderboard">{{leaderboard.rank_style}}</td>
-						<td class="leaderboard">{{leaderboard.max_participants}}</td>
+						<td class="leaderboard">{{leaderboard.participant_count}} / {{leaderboard.max_participants}}</td>
 						<td class="leaderboard">{{leaderboard.description}}</td>
 					</tr>
 					{% endfor %}
@@ -43,7 +43,7 @@
 No participating pilots.</br>
 {% endif %}
 </br>
-<h4>Leaderboards Available</h4>
+<h4>Boards Available</h4>
 {% if eligible_leaderboards %}
 <form action="/pilot/join_board/" method="post">
 {% csrf_token %}
@@ -61,11 +61,11 @@ No participating pilots.</br>
 					<td>Leaderboard</td>
 					<td>Owner</td>
 					<td>Ranks</td>
-					<td>Ranking Method</td>
-					<td>Max Participants</td>
+					<td>Rank Method</td>
+					<td>Pilots</td>
 					<td>Description</td>
 				</tr>
-				{% for id,name,ranks,max_participants,rank_style,owner,desc in eligible_leaderboards %}
+				{% for id,name,ranks,participants,max_participants,rank_style,owner,desc in eligible_leaderboards %}
 				<tr id="tr_dark">
 					<td class="leaderboard"><center><button type="submit" name="joining_board_id" value="{{id}}" class="default" />Join</button>
 					</center></td>
@@ -73,7 +73,7 @@ No participating pilots.</br>
 					<td class="leaderboard">{{owner}}</td>
 					<td class="leaderboard">{{ranks}}</td>
 					<td class="leaderboard">{{rank_style}}</td>
-					<td class="leaderboard">{{max_participants}}</td>
+					<td class="leaderboard">{{participants}} / {{max_participants}}</td>
 					<td class="leaderboard">{{desc}}</td>
 				</tr>
 				{% endfor %}
@@ -87,7 +87,7 @@ No leaderboards available.</br>
 </br>
 <form action="/player/board_action/" method="post">
 	{% csrf_token %}
-	<h4>Player Managed Leaderboards</h4>
+	<h4>Your Boards</h4>
 	<ul>
 		<li><a href="/leaderboards/add/">Add Leaderboard</a>
 		</br>
@@ -102,8 +102,8 @@ No leaderboards available.</br>
 					<td>Leaderboard</td>
 					<td>Owner</td>
 					<td>Ranks</td>
-					<td>Ranking Method</td>
-					<td>Max Participants</td>
+					<td>Rank Method</td>
+					<td>Pilots</td>
 					<td>Description</td>
 				</tr>
 				{% for player,leaderboards in player_managed_leaderboards %}
@@ -120,7 +120,7 @@ No leaderboards available.</br>
 						<td class="leaderboard">{{leaderboard.player.name}}</td>
 						<td class="leaderboard">{{leaderboard.ranks}}</td>
 						<td class="leaderboard">{{leaderboard.rank_style}}</td>
-						<td class="leaderboard">{{leaderboard.max_participants}}</td>
+						<td class="leaderboard">{{leaderboard.participant_count}} / {{leaderboard.max_participants}}</td>
 						<td class="leaderboard">{{leaderboard.description}}</td>
 					</tr>
 					{% endfor %}

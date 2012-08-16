@@ -1,14 +1,14 @@
 <ul>
 	<li><a href="/kills/">Latest Kills</a></li>
 	<li><a href="/newmail/">Post Mail</a></li>
-	<li><a href="/leaderboards_summary/">Leaderboard</a></li>
+	<li><a href="/leaderboards_summary/">Evesolo Board</a></li>
 	<li><a href="/ship_stats/">Ship Stats</a></li>
 	<li><a href="/search/">Search</a></li>
 	<li><a href="http://eve-solo.blogspot.com/">Blog</a></li>
 	{% if user.is_authenticated %}
-	<li><a href="/accounts/profile">User Profile</a></li>
-	<li><a href="/accounts/manage_boards/">User Boards</a></li>
-	<li><a href="/accounts/manage_kills/">Manage Kills</a>	
+	<li><a href="/accounts/profile">Profile</a></li>
+	<li><a href="/accounts/manage_boards/">Your Boards</a></li>
+	<li><a href="/accounts/manage_kills/">Enter Kills</a>	
 	<li><a href="/accounts/logout/">Logout</a></li>
 	{% else %}
 	<li><a href="/accounts/login/">Login</a></li>

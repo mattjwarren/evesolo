@@ -14,7 +14,7 @@ sql_all_class_ranking_custom_points='''select evesolo_pilot.id,evesolo_pilot.nam
 		and evesolo_solokill.points_awarded>0.0
 		group by evesolo_pilot.id,evesolo_pilot.name
 		order by s desc
-		limit 10'''
+		limit %d'''
 
 sql_all_class_ranking_custom_kills='''select evesolo_pilot.id,evesolo_pilot.name,count(evesolo_pilot.name) as s from evesolo_pilot
 		inner join evesolo_solokill on evesolo_solokill.winning_pilot_id=evesolo_pilot.id
@@ -24,7 +24,7 @@ sql_all_class_ranking_custom_kills='''select evesolo_pilot.id,evesolo_pilot.name
 		and evesolo_solokill.points_awarded>0.0
 		group by evesolo_pilot.id,evesolo_pilot.name
 		order by s desc
-		limit 10'''
+		limit %d'''
 
 
 sql_all_class_ranking_nolimit='''select evesolo_pilot.id,evesolo_pilot.name,sum(evesolo_solokill.points_awarded) as s from evesolo_pilot
@@ -316,7 +316,12 @@ sql_ships_worst_wl_ratio_by_class='''select  evesolo_ccpid.ccp_id,evesolo_ship.n
 	order by wl_ratio asc
 	limit 5'''
 
-sql_public_leaderboards='''select evesolo_leaderboard.id, evesolo_leaderboard.name,evesolo_leaderboard.ranks,evesolo_leaderboard.max_participants,evesolo_leaderboard.rank_style,evesolo_player.name,evesolo_leaderboard.description
+sql_public_leaderboards='''select evesolo_leaderboard.id as leaderboard_id, evesolo_leaderboard.name,evesolo_leaderboard.ranks,
+		(select count(*) from evesolo_leaderboardinvites
+		where evesolo_leaderboardinvites.leaderboard_id=leaderboard_id
+		and evesolo_leaderboardinvites.status='ACCEPTED'
+		),
+		evesolo_leaderboard.max_participants,evesolo_leaderboard.rank_style,evesolo_player.name,evesolo_leaderboard.description
 		from evesolo_leaderboard
 		inner join evesolo_player on evesolo_player.id=evesolo_leaderboard.player_id
 		where evesolo_leaderboard.id not in

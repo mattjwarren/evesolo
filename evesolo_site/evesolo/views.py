@@ -329,20 +329,31 @@ def get_managed_boards_context(request):
 			#grab the boards that the pilot has accepted invites for
 			accepted_invites=Leaderboardinvites.objects.filter(pilot=pilot,status='ACCEPTED')
 			participating_in_boards=[ inv.leaderboard for inv in accepted_invites ]
+			#monkey patch in the number of current participants
+			for participating_in_board in participating_in_boards:
+				number_participating=Leaderboardinvites.objects.filter(leaderboard=participating_in_board,status='ACCEPTED').count()
+				if number_participating==None:
+					number_participating=0
+				participating_in_board.participant_count=number_participating
 			if len(participating_in_boards)!=0:
 				all_boards+=participating_in_boards
 				pilots_boards.append((pilot,participating_in_boards))
 						
 		#player managed leaderboards
 		player_leaderboards=Leaderboard.objects.filter(player=player)
-		for leaderboard in player_leaderboards:
-			leaderboards.append(leaderboard)
+		for player_leaderboard in player_leaderboards:
+			number_participating=Leaderboardinvites.objects.filter(leaderboard=player_leaderboard,status='ACCEPTED').count()
+			if number_participating==None:
+				number_participating=0
+			player_leaderboard.participant_count=number_participating
+			leaderboards.append(player_leaderboard)
 		if len(leaderboards)!=0:
 			player_managed_leaderboards.append( (player,leaderboards) )
 
 	#Player eligible to join leaderboards
 	#by default, eligible for all boards that do not have any allowed participants/ships/systems
 	eligible_leaderboards=get_sql_rows(sql_public_leaderboards)
+	
 	
 	#players
 	players=Player.objects.filter(user=request.user)
@@ -1165,7 +1176,7 @@ def leaderboards_summary(request,verified=False):
 	rank_sets.append( ('Past Year',get_sql_rows(sql % (interval_year))))
 	
 	context['rank_sets']=rank_sets
-	context['header_title']='All Class Leaderboards'
+	context['header_title']='Evesolo All Class Leaderboards'
 	context['html_title']=None
 	context['verified']=verified
 	context['verified_link']='<ul><li><a href="/leaderboards_summary/verified/">Switch to verified kills only</a></li></ul>'
@@ -1200,14 +1211,16 @@ def leaderboards_summary_custom(request,leaderboard_id):
 		sql=sql_all_class_ranking_custom_points
 	else:
 		sql=sql_all_class_ranking_custom_kills
-		
+	
+	ranks=leaderboard.ranks
+	
 	rank_sets=[]
-	rank_sets.append( ('All Time',get_sql_rows(sql % (leaderboard_id,'20010101010101'))) )
-	rank_sets.append( ('Past Week',get_sql_rows(sql % (leaderboard_id,interval_week))))
-	rank_sets.append( ('Past Month',get_sql_rows(sql % (leaderboard_id,interval_month))))
-	rank_sets.append( ('Past Quarter',get_sql_rows(sql % (leaderboard_id,interval_quarter))))
-	rank_sets.append( ('Past Half Year',get_sql_rows(sql % (leaderboard_id,interval_half))))
-	rank_sets.append( ('Past Year',get_sql_rows(sql % (leaderboard_id,interval_year))))
+	rank_sets.append( ('All Time',get_sql_rows(sql % (leaderboard_id,'20010101010101',ranks))) )
+	rank_sets.append( ('Past Week',get_sql_rows(sql % (leaderboard_id,interval_week,ranks))))
+	rank_sets.append( ('Past Month',get_sql_rows(sql % (leaderboard_id,interval_month,ranks))))
+	rank_sets.append( ('Past Quarter',get_sql_rows(sql % (leaderboard_id,interval_quarter,ranks))))
+	rank_sets.append( ('Past Half Year',get_sql_rows(sql % (leaderboard_id,interval_half,ranks))))
+	rank_sets.append( ('Past Year',get_sql_rows(sql % (leaderboard_id,interval_year,ranks))))
 	
 	context['rank_sets']=rank_sets
 	context['header_title']='Leaderboard rankings: %s' % leaderboard.name

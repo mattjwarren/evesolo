@@ -472,7 +472,7 @@ def leave_board(request):
 		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
 
 	#check pilot is registered to any user players,
-	#then the board exists, then make the LEaderboardinvites with status ACCEPTED
+	#then the board exists
 	
 	try:
 		resigning_pilot=Pilot.objects.get(id=resigning_pilot_id)
@@ -499,6 +499,7 @@ def leave_board(request):
 		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
 	
 	#Ok. Remove ACCEPTED status invite for this board from pilot
+	#(Kills remain associated)
 	try:
 		invite=Leaderboardinvites.objects.get(leaderboard=board_to_resign,pilot=resigning_pilot,status='ACCEPTED')
 	except Leaderboardinvites.DoesNotExist:
@@ -1171,6 +1172,49 @@ def leaderboards_summary(request,verified=False):
 	context['unverified_link']='<ul><li><a href="/leaderboards_summary/">Switch to all kills</a></li></ul>'
 	return render_to_response('evesolo/leaderboard.html',context,context_instance=RequestContext(request))
 
+def leaderboards_summary_custom(request,leaderboard_id):
+	context={}
+	try:
+		leaderboard_id=int(leaderboard_id)
+	except ValueError:
+		context['error']='Unknown leaderboard.'
+		return render_to_response('evesolo/leaderboard.html',context,context_instance=RequestContext(request))
+	
+	try:
+		leaderboard=Leaderboard.objects.get(id=leaderboard_id)
+	except Leaderboard.DoesNotExist:
+		context['error']='Unknown leaderboard.'
+		return render_to_response('evesolo/leaderboard.html',context,context_instance=RequestContext(request))
+
+	#Run the leaderbaords summary, but restrict to kills registered to the given leaderboard
+	#determine what rank style and use appropriate sql
+	now=datetime.now()
+	interval_week=datetime.strftime(now-timedelta(days=7),'%Y%m%d%H%M%S')
+	interval_month=datetime.strftime(now-timedelta(days=31),'%Y%m%d%H%M%S')
+	interval_quarter=datetime.strftime(now-timedelta(days=91),'%Y%m%d%H%M%S')
+	interval_half=datetime.strftime(now-timedelta(days=182),'%Y%m%d%H%M%S')
+	interval_year=datetime.strftime(now-timedelta(days=365),'%Y%m%d%H%M%S')
+	context={}
+	
+	if leaderboard.rank_style=='POINTS':
+		sql=sql_all_class_ranking_custom_points
+	else:
+		sql=sql_all_class_ranking_custom_kills
+		
+	rank_sets=[]
+	rank_sets.append( ('All Time',get_sql_rows(sql % (leaderboard_id,'20010101010101'))) )
+	rank_sets.append( ('Past Week',get_sql_rows(sql % (leaderboard_id,interval_week))))
+	rank_sets.append( ('Past Month',get_sql_rows(sql % (leaderboard_id,interval_month))))
+	rank_sets.append( ('Past Quarter',get_sql_rows(sql % (leaderboard_id,interval_quarter))))
+	rank_sets.append( ('Past Half Year',get_sql_rows(sql % (leaderboard_id,interval_half))))
+	rank_sets.append( ('Past Year',get_sql_rows(sql % (leaderboard_id,interval_year))))
+	
+	context['rank_sets']=rank_sets
+	context['header_title']='Leaderboard rankings: %s' % leaderboard.name
+	context['html_title']=None
+	context['include_verify']=False
+	return render_to_response('evesolo/leaderboard.html',context,context_instance=RequestContext(request))
+
 def ship_leaderboard(request,ship_id,verified=False):
 	now=datetime.now()
 	interval_week=datetime.strftime(now-timedelta(days=7),'%Y%m%d%H%M%S')
@@ -1200,6 +1244,7 @@ def ship_leaderboard(request,ship_id,verified=False):
 	rank_sets.append( ('Past Year',get_sql_rows(sql % (interval_year,ship_id))))
 	context['rank_sets']=rank_sets
 	context['header_title']=None
+	#Waiter, There's HTML in my soup!
 	context['html_title']='<center><h1><img src="http://image.eveonline.com/Render/%d_128.png"></img>%s Leaderboards</h1></center>' % (ship.CCPID.ccp_id, ship.name)
 	context['verified']=verified
 	context['verified_link']='<ul><li><a href="/leaderboards_ship/%d/verified/">Switch to verified kills only</a></li></ul>' % ship_id
@@ -1568,7 +1613,7 @@ def get_manage_kills_context(request):
 	#winning_kills
 	kill_list=Solokill.objects.filter(winning_pilot__player__user=request.user,kill_date__gt=interval_sixweeks).order_by('-kill_date')
 	#kill_list=Solokill.objects.all() ##
-	manage_kills_context['kill_list']=kill_list
+	manage_kills_context['kill_list']=[ kill for kill in kill_list if kill.verified ]
 	
 	#leadrboards
 	leaderboards=[]
@@ -1604,6 +1649,11 @@ def manage_kills(request):
 			return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
 		kill_list=context['kill_list']
 		context['kill_list']=[kill for kill in kill_list if kill.winning_pilot==filter_by_pilot]
+		
+		#leaderboards filter
+		pilot_accepted_invites=Leaderboardinvites.objects.filter(pilot=filter_by_pilot,status='ACCEPTED')
+		leaderboards=[invite.leaderboard for invite in pilot_accepted_invites]
+		context['leaderboards']=leaderboards
 		return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
 	
 	elif ('enter_kills' in request.POST) and (request.POST['enter_kills']):

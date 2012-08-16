@@ -6,6 +6,8 @@ from models import Leaderboardallowedships,Leaderboardallowedsystems, Leaderboar
 #from evesolo.models import Solokill, Pilot, Player, Ship, Hullclass, Leaderboard, Leaderboardallowedparticipants
 #from evesolo.models import Leaderboardallowedships,Leaderboardallowedsystems, Leaderboardinvites
 
+#test on deploy
+
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.core.mail import send_mail

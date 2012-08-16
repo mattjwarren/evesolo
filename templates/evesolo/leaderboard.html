@@ -2,18 +2,22 @@
 {% block content %}
 {% if rank_sets %}
 	{% if header_title %}
-	<h1>{{header_title}}</h1>
+	<h1>{{header_title|safe}}</h1>
 		{% else %}{% if html_title %}
 		{{html_title|safe}}
 		{% endif %}
 	{% endif %}
-	{% if verified %}
-	<h2>Verified kills only</h2>
-	{{unverified_link|safe}}
-	{% else %}
-	<h2>All kills</h2>
-	{{verified_link|safe}}
+	
+	{% if include_verify %}
+		{% if verified %}
+		<h2>Verified kills only</h2>
+		{{unverified_link|safe}}
+		{% else %}
+		<h2>All kills</h2>
+		{{verified_link|safe}}
+		{% endif %}
 	{% endif %}
+	
 	{% for rank_set in rank_sets %}
 	<h3>{{rank_set.0}}</h3>
 	<div class="leaderboardpanel">

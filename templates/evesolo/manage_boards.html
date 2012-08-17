@@ -19,7 +19,14 @@
 					<td>Description</td></tr>
 				{% for pilot,leaderboards in pilots_boards %}
 				<tr id="tr_light">
-					<td class="leaderboard">{{pilot.name}}</td><td></td><td></td><td></td><td></td><td></td><td></td>
+					<td class="leaderboard"><a href="/pilot/{{pilot.id}}/">{{pilot.name}}</a>
+					</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
 				</tr>
 					{% for leaderboard in leaderboards %}
 					<tr id="tr_dark">
@@ -42,7 +49,6 @@
 {% else %}
 No participating pilots.</br>
 {% endif %}
-</br>
 <h4>Boards Available</h4>
 {% if eligible_leaderboards %}
 <form action="/pilot/join_board/" method="post">
@@ -84,7 +90,6 @@ No participating pilots.</br>
 {% else %}
 No leaderboards available.</br>
 {% endif %}
-</br>
 <form action="/player/board_action/" method="post">
 	{% csrf_token %}
 	<h4>Your Boards</h4>

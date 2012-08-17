@@ -33,7 +33,27 @@ sql_all_class_ranking_nolimit='''select evesolo_pilot.id,evesolo_pilot.name,sum(
 		and evesolo_solokill.points_awarded>0.0
 		group by evesolo_pilot.id, evesolo_pilot.name
 		order by s desc
+	'''
+###
+sql_custom_ranking_nolimit_points='''select evesolo_pilot.id,evesolo_pilot.name,sum(evesolo_solokill.points_awarded) as s from evesolo_pilot
+		inner join evesolo_solokill on evesolo_solokill.winning_pilot_id=evesolo_pilot.id
+		inner join evesolo_leaderboardkills on evesolo_solokill.id=evesolo_leaderboardkills.solokill_id
+		where evesolo_leaderboardkills.leaderboard_id=%d
+		and evesolo_solokill.kill_date>'%s'
+		and evesolo_solokill.points_awarded>0.0
+		group by evesolo_pilot.id, evesolo_pilot.name
+		order by s desc
 		'''
+sql_custom_ranking_nolimit_kills='''select evesolo_pilot.id,evesolo_pilot.name,count(evesolo_pilot.name) as s from evesolo_pilot
+		inner join evesolo_solokill on evesolo_solokill.winning_pilot_id=evesolo_pilot.id
+		inner join evesolo_leaderboardkills on evesolo_solokill.id=evesolo_leaderboardkills.solokill_id
+		where evesolo_leaderboardkills.leaderboard_id=%d
+		and evesolo_solokill.kill_date>'%s'
+		and evesolo_solokill.points_awarded>0.0
+		group by evesolo_pilot.id, evesolo_pilot.name
+		order by s desc
+		'''
+###
 		
 sql_all_class_ranking_interval_nolimit='''select evesolo_pilot.id,evesolo_pilot.name,sum(evesolo_solokill.points_awarded) as s from evesolo_pilot
 		inner join evesolo_solokill on evesolo_solokill.winning_pilot_id=evesolo_pilot.id
@@ -43,7 +63,28 @@ sql_all_class_ranking_interval_nolimit='''select evesolo_pilot.id,evesolo_pilot.
 		group by  evesolo_pilot.id,evesolo_pilot.name
 		order by s desc
 		'''
-
+##
+sql_custom_ranking_interval_nolimit_points='''select evesolo_pilot.id,evesolo_pilot.name,sum(evesolo_solokill.points_awarded) as s from evesolo_pilot
+		inner join evesolo_solokill on evesolo_solokill.winning_pilot_id=evesolo_pilot.id
+		inner join evesolo_leaderboardkills on evesolo_solokill.id=evesolo_leaderboardkills.solokill_id
+		where evesolo_leaderboardkills.leaderboard_id=%d
+		and evesolo_solokill.kill_date>='%s'
+		and evesolo_solokill.kill_date<'%s'
+		and evesolo_solokill.points_awarded>0.0
+		group by  evesolo_pilot.id,evesolo_pilot.name
+		order by s desc
+		'''
+sql_custom_ranking_interval_nolimit_kills='''select evesolo_pilot.id,evesolo_pilot.name,count(evesolo_pilot.name) as s from evesolo_pilot
+		inner join evesolo_solokill on evesolo_solokill.winning_pilot_id=evesolo_pilot.id
+		inner join evesolo_leaderboardkills on evesolo_solokill.id=evesolo_leaderboardkills.solokill_id
+		where evesolo_leaderboardkills.leaderboard_id=%d
+		and evesolo_solokill.kill_date>='%s'
+		and evesolo_solokill.kill_date<'%s'
+		and evesolo_solokill.points_awarded>0.0
+		group by  evesolo_pilot.id,evesolo_pilot.name
+		order by s desc
+		'''
+##
 		
 sql_all_class_ranking_ver='''select evesolo_pilot.id,evesolo_pilot.name,sum(evesolo_solokill.points_awarded) as s from evesolo_pilot
 		inner join evesolo_solokill on evesolo_solokill.winning_pilot_id=evesolo_pilot.id
@@ -146,6 +187,16 @@ sql_pilot_hullclass_wins_points='''select evesolo_hullclass.human_name,count(*) 
 		and evesolo_solokill.points_awarded>0.0
 		group by evesolo_hullclass.name
 		order by c desc,p desc'''
+sql_pilot_hullclass_wins_points_custom='''select evesolo_hullclass.human_name,count(*) as c,sum(evesolo_solokill.points_awarded),evesolo_hullclass.id as p from evesolo_hullclass
+		inner join evesolo_ship on evesolo_ship.hull_class_id=evesolo_hullclass.id
+		inner join evesolo_solokill on evesolo_solokill.winners_ship_id=evesolo_ship.id
+		inner join evesolo_pilot on evesolo_pilot.id=evesolo_solokill.winning_pilot_id
+		inner join evesolo_leaderboardkills on evesolo_solokill.id=evesolo_leaderboardkills.solokill_id
+		where evesolo_leaderboardkills.leaderboard_id=%d
+		and evesolo_pilot.id=%d
+		and evesolo_solokill.points_awarded>0.0
+		group by evesolo_hullclass.name
+		order by c desc,p desc'''
 
 #sql_pilot_ship_wins_points='''select evesolo_ship.name,count(*) as c,sum(evesolo_solokill.points_awarded) as p from evesolo_ship
 #		inner join evesolo_solokill on evesolo_solokill.winners_ship_id=evesolo_ship.id
@@ -161,15 +212,45 @@ sql_pilot_ship_wins_points='''select evesolo_ship.name,count(*) as c,sum(evesolo
 		and evesolo_solokill.points_awarded>0.0
 		group by evesolo_ship.name
 		order by c desc,p desc'''
+sql_pilot_ship_wins_points_custom='''select evesolo_ship.name,count(*) as c,sum(evesolo_solokill.points_awarded),evesolo_ship.id as p from evesolo_ship
+		inner join evesolo_solokill on evesolo_solokill.winners_ship_id=evesolo_ship.id
+		inner join evesolo_pilot on evesolo_pilot.id=evesolo_solokill.winning_pilot_id
+		inner join evesolo_leaderboardkills on evesolo_solokill.id=evesolo_leaderboardkills.solokill_id
+		where evesolo_leaderboardkills.leaderboard_id=%d
+		and evesolo_pilot.id=%d
+		and evesolo_solokill.points_awarded>0.0
+		group by evesolo_ship.name
+		order by c desc,p desc'''
 
 sql_pilot_ships_seen_count='''select evesolo_ccpid.ccp_id,evesolo_ship.name,count(*) as c,evesolo_ship.id from evesolo_ship
-		inner join evesolo_solokill on ((evesolo_solokill.winners_ship_id=evesolo_ship.id
-                                     and evesolo_solokill.winning_pilot_id=%d)
-                                     or
-                                     (evesolo_solokill.losers_ship_id=evesolo_ship.id
-                                     and evesolo_solokill.losing_pilot_id=%d))
+		inner join evesolo_solokill on (
+										 (evesolo_solokill.winners_ship_id=evesolo_ship.id
+                                     		and evesolo_solokill.winning_pilot_id=%d
+                                     	 )
+                                     		or
+                                     	 (evesolo_solokill.losers_ship_id=evesolo_ship.id
+                                     	    and evesolo_solokill.losing_pilot_id=%d
+                                     	 )
+                                      )
 		inner join evesolo_ccpid on evesolo_ccpid.id=evesolo_ship.CCPID_id
 		where evesolo_solokill.points_awarded>0.0
+		group by evesolo_ship.name
+		order by c desc
+		limit 5'''
+sql_pilot_ships_seen_count_custom='''select evesolo_ccpid.ccp_id,evesolo_ship.name,count(*) as c,evesolo_ship.id from evesolo_ship
+		inner join evesolo_solokill on (
+										 (evesolo_solokill.winners_ship_id=evesolo_ship.id
+                                     		and evesolo_solokill.winning_pilot_id=%d
+                                     	 )
+                                     		or
+                                     	 (evesolo_solokill.losers_ship_id=evesolo_ship.id
+                                     	    and evesolo_solokill.losing_pilot_id=%d
+                                     	 )
+                                      )
+		inner join evesolo_ccpid on evesolo_ccpid.id=evesolo_ship.CCPID_id
+		inner join evesolo_leaderboardkills on evesolo_solokill.id=evesolo_leaderboardkills.solokill_id
+		where evesolo_leaderboardkills.leaderboard_id=%d
+		and evesolo_solokill.points_awarded>0.0
 		group by evesolo_ship.name
 		order by c desc
 		limit 5'''
@@ -316,9 +397,9 @@ sql_ships_worst_wl_ratio_by_class='''select  evesolo_ccpid.ccp_id,evesolo_ship.n
 	order by wl_ratio asc
 	limit 5'''
 
-sql_public_leaderboards='''select evesolo_leaderboard.id as leaderboard_id, evesolo_leaderboard.name,evesolo_leaderboard.ranks,
+sql_public_leaderboards='''select evesolo_leaderboard.id as leaderboardid, evesolo_leaderboard.name,evesolo_leaderboard.ranks,
 		(select count(*) from evesolo_leaderboardinvites
-		where evesolo_leaderboardinvites.leaderboard_id=leaderboard_id
+		where evesolo_leaderboardinvites.leaderboard_id=leaderboardid
 		and evesolo_leaderboardinvites.status='ACCEPTED'
 		),
 		evesolo_leaderboard.max_participants,evesolo_leaderboard.rank_style,evesolo_player.name,evesolo_leaderboard.description

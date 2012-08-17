@@ -1,11 +1,27 @@
 {% extends "evesolo/base.html" %}
 {% block content %}
 {% if pilot %}
-<h1>All Time All Class Summary For Pilot</h1>
+	{% if leaderboard %}
+	<h1>Pilot summary for {{leaderboard.name}}</h1>
+	{% else %}
+	<h1>Pilot Summary For Evesolo Leaderboard</h1>
+	{% endif %}
 <ul>
 	<li><h2>{{pilot.name}}</h2></li>
+	{% if participating_in_boards %}
+	<li><a href="/pilot/{{pilot.id}}/">Evesolo Board</a>
+		{% for board in participating_in_boards %}
+		 | <a href="/pilot/{{pilot.id}}/{{board.id}}/">{{board.name}}</a>
+		{% endfor %}
+	</li>
+	{% endif %}
 </ul>
-<h3>All-Class Rankings</h3>
+{% if leaderboard %}
+	<h3>Rankings</h3>
+	<ul><li><a href="/leaderboards_custom/{{leaderboard.id}}">View board</a></li></ul>
+	{% else %}
+	<h3>All-Class Rankings</h3>
+{% endif %}
 <div class="leaderboardpanel">
 	<div class="leaderboardpanelinner">
 		<table class="leaderboardpaneltable">
@@ -84,7 +100,16 @@
 	<div class="leaderboardpanelinner">
 		<table class="leaderboardpaneltable">
 			<tr id="tr_light">
-				<td class="leaderboard">Points</td>
+				<td class="leaderboard">{% if leaderboard %}
+											{% if leaderboard.rank_style == "POINTS" %}
+											Points
+											{% else %}
+											Kills
+											{% endif %}
+										{% else %}
+										Points
+										{% endif %}
+				</td>
 				<td class="leaderboard"><table class="leaderboardpaneltable">
 						<tr>
 							<td class="leaderboard" width="33%"></td>

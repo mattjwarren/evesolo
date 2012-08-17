@@ -30,7 +30,8 @@ urlpatterns = patterns('',
 	
 	url(r'^ship_stats/$','evesolo.views.ship_stats'),
 	
-	url(r'^pilot/(?P<pilot_id>\d+)/$','evesolo.views.pilot'),
+	url(r'^pilot/(?P<pilot_id>\d+)/$','evesolo.views.pilot',{'board_id':None}),
+	url(r'^pilot/(?P<pilot_id>\d+)/(?P<board_id>\d+)/$','evesolo.views.pilot'),
 	url(r'^pilot/pullmails/$','evesolo.views.pull_mails'),
 	url(r'^pilot/join_board/$','evesolo.views.join_board'),
 	url(r'^pilot/leave_board/$','evesolo.views.leave_board'),

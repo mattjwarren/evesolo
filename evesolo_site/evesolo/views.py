@@ -1403,7 +1403,7 @@ def viewkill(request,solokill_id):
 		sk.verified='Verified'
 	return render_to_response('evesolo/viewkill.html',{'kill':sk},context_instance=RequestContext(request))
 
-def pilot(request,pilot_id,verified=False):
+def pilot(request,pilot_id,board_id,verified=False):
 	#get allclass alltime rank/points
 	pilot_id=int(pilot_id)
 	try:
@@ -1426,49 +1426,96 @@ def pilot(request,pilot_id,verified=False):
 	
 	context={}
 	
-	if verified:
-		sql=sql_all_class_ranking_ver_nolimit
-		sql_interval=sql_all_class_ranking_interval_ver_nolimit
+	accepted_invites=Leaderboardinvites.objects.filter(pilot=pilot,status='ACCEPTED')
+	participating_in_boards=[ inv.leaderboard for inv in accepted_invites ]
+	if len(participating_in_boards)==0:
+		participating_in_boards=None
+	leaderboard=None
+	if board_id:
+		try:
+			board_id=int(board_id)
+		except ValueError:
+			context['error']='The leaderboard is unknown.'
+			board_id=None
+		if board_id:
+			try:
+				leaderboard=Leaderboard.objects.get(id=board_id)
+			except Leaderboard.DoesNotExist:
+				context['error']='The leaderboard is unknown.'
+				board_id=None
+				
+	if not board_id:
+		if verified:
+			sql=sql_all_class_ranking_ver_nolimit
+			sql_interval=sql_all_class_ranking_interval_ver_nolimit
+		else:
+			sql=sql_all_class_ranking_nolimit
+			sql_interval=sql_all_class_ranking_interval_nolimit
 	else:
-		sql=sql_all_class_ranking_nolimit
-		sql_interval=sql_all_class_ranking_interval_nolimit
+		if leaderboard.rank_style=='KILLS':
+			sql=sql_custom_ranking_nolimit_kills
+			sql_interval=sql_custom_ranking_interval_nolimit_kills
+		else:
+			sql=sql_custom_ranking_nolimit_points
+			sql_interval=sql_custom_ranking_interval_nolimit_points
 
 		
 		
 	try:
-		all_time_rank=[ r[0] for r in get_sql_rows(sql % ('20010101010101'))].index(pilot_id)+1
+		fmt=('20010101010101')
+		if board_id:
+			fmt=(board_id,'20010101010101')
+		all_time_rank=[ r[0] for r in get_sql_rows(sql % fmt)].index(pilot_id)+1
 	except ValueError:
 		all_time_rank='-'
 
 		
 		
 	try:
-		past_week_rank=[ r[0] for r in get_sql_rows(sql % (interval_week))].index(pilot_id)+1
+		fmt=(interval_week)
+		if board_id:
+			fmt=(board_id,interval_week)
+		past_week_rank=[ r[0] for r in get_sql_rows(sql % fmt)].index(pilot_id)+1
 	except ValueError:
 		past_week_rank='-'
 	try:
-		ppast_week_rank=[ r[0] for r in get_sql_rows(sql_interval % (prev_week_start,interval_week))].index(pilot_id)+1
+		fmt=(prev_week_start,interval_week)
+		if board_id:
+			fmt=(board_id,prev_week_start,interval_week)
+		ppast_week_rank=[ r[0] for r in get_sql_rows(sql_interval % fmt)].index(pilot_id)+1
 	except:
 		ppast_week_rank='-'
 	
 	
 	
 	try:
-		past_month_rank=[ r[0] for r in get_sql_rows(sql % (interval_month))].index(pilot_id)+1
+		fmt=(interval_month)
+		if board_id:
+			fmt=(board_id,interval_month)
+		past_month_rank=[ r[0] for r in get_sql_rows(sql % fmt)].index(pilot_id)+1
 	except ValueError:
 		past_month_rank='-'
 	try:
-		ppast_month_rank=[ r[0] for r in get_sql_rows(sql_interval % (prev_month_start,interval_month))].index(pilot_id)+1
+		fmt=(prev_month_start,interval_month)
+		if board_id:
+			fmt=(board_id,prev_month_start,interval_month)
+		ppast_month_rank=[ r[0] for r in get_sql_rows(sql_interval % fmt)].index(pilot_id)+1
 	except:
 		ppast_month_rank='-'
 
 		
 		
 	try:
-		past_quarter_rank=[ r[0] for r in get_sql_rows(sql % (interval_quarter))].index(pilot_id)+1
+		fmt=(interval_quarter)
+		if board_id:
+			fmt=(board_id,interval_quarter)
+		past_quarter_rank=[ r[0] for r in get_sql_rows(sql % fmt)].index(pilot_id)+1
 	except ValueError:
 		past_quarter_rank='-'
 	try:
+		fmt=(prev_quarter_start,interval_quarter)
+		if board_id:
+			fmt=(board_id,prev_quarter_start,interval_quarter)
 		ppast_quarter_rank=[ r[0] for r in get_sql_rows(sql_interval % (prev_quarter_start,interval_quarter))].index(pilot_id)+1
 	except:
 		ppast_quarter_rank='-'
@@ -1477,40 +1524,70 @@ def pilot(request,pilot_id,verified=False):
 		
 		
 	try:
-		past_half_year_rank=[ r[0] for r in get_sql_rows(sql % (interval_half))].index(pilot_id)+1
+		fmt=(interval_half)
+		if board_id:
+			fmt=(board_id,interval_half)
+		past_half_year_rank=[ r[0] for r in get_sql_rows(sql % fmt)].index(pilot_id)+1
 	except ValueError:
 		past_half_year_rank='-'
 	try:
-		ppast_half_year_rank=[ r[0] for r in get_sql_rows(sql_interval % (prev_half_start,interval_half))].index(pilot_id)+1
+		fmt=(prev_half_start,interval_half)
+		if board_id:
+			fmt=(board_id,prev_half_start,interval_half)
+		ppast_half_year_rank=[ r[0] for r in get_sql_rows(sql_interval % fmt)].index(pilot_id)+1
 	except:
 		ppast_half_year_rank='-'
 
 		
 		
 	try:
-		past_year_rank=[ r[0] for r in get_sql_rows(sql % (interval_year))].index(pilot_id)+1
+		fmt=(interval_year)
+		if board_id:
+			fmt=(board_id,interval_year)
+		past_year_rank=[ r[0] for r in get_sql_rows(sql % fmt)].index(pilot_id)+1
 	except ValueError:
 		past_year_rank='-'
 	try:
+		fmt=(prev_year_start,interval_year)
+		if board_id:
+			fmt=(board_id,prev_year_start,interval_year)
 		ppast_year_rank=[ r[0] for r in get_sql_rows(sql_interval % (prev_year_start,interval_year))].index(pilot_id)+1
 	except:
 		ppast_year_rank='-'
 
 
 
+	if not board_id:
+		all_pilot_scores=Pilot.objects.annotate(total_points=Sum('winning_pilot__points_awarded'))
+		all_class=all_pilot_scores.order_by('-total_points','name')
+		pilot_points=all_class.get(pk=pilot_id).total_points
+	else:
+		#calculate total score for leaderbaord
+		all_pilot_board_kills=Leaderboardkills.objects.filter(leaderboard=leaderboard,solokill__winning_pilot=pilot)
+		if leaderboard.rank_style=='POINTS':
+			pilot_points=sum([ apbk.solokill.points_awarded for apbk in all_pilot_board_kills])
+		else:
+			pilot_points=len(all_pilot_board_kills)
 		
-	all_pilot_scores=Pilot.objects.annotate(total_points=Sum('winning_pilot__points_awarded'))
-	all_class=all_pilot_scores.order_by('-total_points','name')
-	pilot_points=all_class.get(pk=pilot_id).total_points
-
 	#get pilot w:l ratio
-	pilot_winkills=Solokill.objects.filter(winning_pilot=pilot)
-	pilot_losskills=Solokill.objects.filter(losing_pilot=pilot)
+	if not board_id:
+		pilot_winkills=Solokill.objects.filter(winning_pilot=pilot)
+		pilot_losskills=Solokill.objects.filter(losing_pilot=pilot)
+	else:
+		pilot_winkills=Leaderboardkills.objects.filter(leaderboard=leaderboard,solokill__winning_pilot=pilot)
+		pilot_losskills=Leaderboardkills.objects.filter(leaderboard=leaderboard,solokill__losing_pilot=pilot)
 	pilot_wins=len(pilot_winkills)
 	pilot_losses=len(pilot_losskills)
 	w_l_ratio='%d - %d' % (pilot_wins,pilot_losses)
+		
+		
 	#Class w/most wins
-	pilot_class_wins=get_sql_rows(sql_pilot_hullclass_wins_points % pilot.id)
+	if not board_id:
+		pilot_class_wins=get_sql_rows(sql_pilot_hullclass_wins_points % pilot.id)
+	else:
+		pilot_class_wins=get_sql_rows(sql_pilot_hullclass_wins_points_custom % (leaderboard.id,pilot.id))
+
+	
 	if len(pilot_class_wins)!=0: #####
 		pilot_best_class=pilot_class_wins[0][0]
 		pilot_best_class_wins=pilot_class_wins[0][1]
@@ -1523,7 +1600,10 @@ def pilot(request,pilot_id,verified=False):
 		pilot_best_class_id=0
 
 	#Ship w/most wins
-	pilot_ship_wins=get_sql_rows(sql_pilot_ship_wins_points % pilot.id)
+	if not board_id:
+		pilot_ship_wins=get_sql_rows(sql_pilot_ship_wins_points % pilot.id)
+	else:
+		pilot_ship_wins=get_sql_rows(sql_pilot_ship_wins_points_custom % (leaderboard.id,pilot.id))
 	if len(pilot_ship_wins)!=0: ####
 		pilot_best_ship=pilot_ship_wins[0][0]
 		best_ship_obj=Ship.objects.get(name=pilot_best_ship)
@@ -1537,12 +1617,17 @@ def pilot(request,pilot_id,verified=False):
 		pilot_best_ship_id=0
 		
 	#favourite ship
-	pilot_favourite_ships=get_sql_rows(sql_pilot_ships_seen_count % (pilot_id,pilot_id))
-	
+	if not board_id:
+		pilot_favourite_ships=get_sql_rows(sql_pilot_ships_seen_count % (pilot_id,pilot_id))
+	else:
+		pilot_favourite_ships=get_sql_rows(sql_pilot_ships_seen_count_custom % (pilot_id,pilot_id,leaderboard.id))
 	
 	#last 10 fights
-	last_10_fights=Solokill.objects.filter(Q(winning_pilot=pilot)|Q(losing_pilot=pilot)).order_by('-kill_date')[:10]
-	
+	if not board_id:
+		last_10_fights=Solokill.objects.filter(Q(winning_pilot=pilot)|Q(losing_pilot=pilot),points_awarded__gt=0).order_by('-kill_date')[:10]
+	else:
+		last_10_fights_leaderboard_kills=Leaderboardkills.objects.filter(Q(solokill__winning_pilot=pilot)|Q(solokill__losing_pilot=pilot),leaderboard=leaderboard).order_by('-solokill__kill_date')[:10]
+		last_10_fights=[ ltflk.solokill for ltflk in last_10_fights_leaderboard_kills]
 	
 #	all_time_rank=[ r[0] for r in get_sql_rows(sql % ('20010101010101'))].index(pilot_id)+1
 #	past_week_rank=[ r[0] for r in get_sql_rows(sql % (interval_week))].index(pilot_id)+1
@@ -1575,7 +1660,9 @@ def pilot(request,pilot_id,verified=False):
 							   'bestshipwinspoints':pilot_best_ship_wins_points,
 							   'bestshipid':pilot_best_ship_id,
 							   'latest_kills':last_10_fights,
-							   'most_seen_ships':pilot_favourite_ships},
+							   'most_seen_ships':pilot_favourite_ships,
+							   'participating_in_boards':participating_in_boards,
+							   'leaderboard':leaderboard},
 							   context_instance=RequestContext(request))
 
 
@@ -1624,7 +1711,7 @@ def get_manage_kills_context(request):
 	manage_kills_context['pilots']=pilots
 	
 	#winning_kills
-	kill_list=Solokill.objects.filter(winning_pilot__player__user=request.user,kill_date__gt=interval_sixweeks).order_by('-kill_date')
+	kill_list=Solokill.objects.filter(winning_pilot__player__user=request.user,kill_date__gt=interval_sixweeks,points_awarded__gt=0).order_by('-kill_date')
 	#kill_list=Solokill.objects.all() ##
 	manage_kills_context['kill_list']=[ kill for kill in kill_list if kill.verified ]
 	

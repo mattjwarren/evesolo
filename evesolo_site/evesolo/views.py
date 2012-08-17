@@ -1383,11 +1383,19 @@ def postmail(request):
 	return HttpResponseRedirect(reverse('evesolo.views.newmail'))
 
 def latestkills(request,error=None):
+	total_pilots=Pilot.objects.count()
+	total_kills=Solokill.objects.count()
+	total_scoring_kills=Solokill.objects.filter(points_awarded__gt=0).count()
+	
 	latest_kills=Solokill.objects.exclude(points_awarded=0).order_by('-kill_date')[:10]
 	
 	latest_submitted_kills=Solokill.objects.exclude(points_awarded=0).order_by('-submit_date')[:10]
 	return render_to_response('evesolo/latestkills.html',{'latest_kills':latest_kills,
 														  'latest_submitted_kills':latest_submitted_kills,
+														  #'message':'Tracking %d pilots with %d kills (%d point-scoring kills)' % (total_pilots,total_kills,total_scoring_kills),
+														  'total_pilots':total_pilots,
+														  'total_kills':total_kills,
+														  'scoring_kills':total_scoring_kills,
 														  'error':error},
 														  context_instance=RequestContext(request))
 
@@ -1626,7 +1634,7 @@ def pilot(request,pilot_id,board_id,verified=False):
 	if not board_id:
 		last_10_fights=Solokill.objects.filter(Q(winning_pilot=pilot)|Q(losing_pilot=pilot),points_awarded__gt=0).order_by('-kill_date')[:10]
 	else:
-		last_10_fights_leaderboard_kills=Leaderboardkills.objects.filter(Q(solokill__winning_pilot=pilot)|Q(solokill__losing_pilot=pilot),leaderboard=leaderboard).order_by('-solokill__kill_date')[:10]
+		last_10_fights_leaderboard_kills=Leaderboardkills.objects.filter(Q(solokill__winning_pilot=pilot)|Q(solokill__losing_pilot=pilot),leaderboard=leaderboard,solokill__points_awarded__gt=0).order_by('-solokill__kill_date')[:10]
 		last_10_fights=[ ltflk.solokill for ltflk in last_10_fights_leaderboard_kills]
 	
 #	all_time_rank=[ r[0] for r in get_sql_rows(sql % ('20010101010101'))].index(pilot_id)+1

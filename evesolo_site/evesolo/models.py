@@ -141,7 +141,7 @@ class Leaderboardgroups(models.Model):
 	def __unicode__(self):
 		return 'Group %s for leaderboard %s' % (self.name,self.leaderboard.name)
 
-##Phase 2			
+##Phase 2			- Join time
 class Leaderboardallowedparticipants(models.Model):
 	leaderboard=models.ForeignKey(Leaderboard,null=False)
 	#type :- CORP | ALLIANCE | PILOT
@@ -152,7 +152,7 @@ class Leaderboardallowedparticipants(models.Model):
 		return '%s : %s allowed for leaderboard %s' % (self.type,self.name,self.leaderboard.name)
 
 	
-##Phase 2	
+##Phase 2	- Kill Entry Time
 class Leaderboardallowedships(models.Model):
 	leaderboard=models.ForeignKey(Leaderboard,null=False)
 	#type :- CLASS | SHIP
@@ -163,7 +163,7 @@ class Leaderboardallowedships(models.Model):
 		return '%s : %s allowed in leaderboard %s' % (self.type,self.name,self.leaderboard.name)
 
 
-##Phase 2	
+##Phase 2	- KillEntry time
 class Leaderboardallowedsystems(models.Model):
 	leaderboard=models.ForeignKey(Leaderboard,null=False)
 	name=models.CharField(max_length=64)

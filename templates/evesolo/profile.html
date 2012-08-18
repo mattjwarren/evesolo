@@ -17,7 +17,7 @@ User: {{user.username}} (<a href="/accounts/change_password/">Change password</a
 		<div class="leaderboardpanelinner">
 			<table class="leaderboardpaneltable">
 				<tr class="boardheader"><td>Player Name</td><td>Pilot</td><td>ID</td><td>vCode</td><td>Valid?</td></tr>
-				{% for player,pilots,leaderboards in players %}
+				{% for player,pilots in players %}
 				<tr id="tr_light">
 					<td class="leaderboard">{{player.name}}</td><td></td><td></td><td></td><td></td>
 				</tr>

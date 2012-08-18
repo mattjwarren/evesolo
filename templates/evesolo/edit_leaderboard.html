@@ -1,8 +1,9 @@
 {% extends "evesolo/base.html" %}
 {% block content %}
-<h1>Edit Leaderboard</h1>
 <form action="/player/board_action/" method="post">
 {% csrf_token %}
+<h1>Edit Leaderboard</h1>
+<ul><li><button type="submit" name="Remove" value="{{leaderboard.id}}" class="default" />Delete!</button></li></ul><br><br>
     <table>
 	<tr>
 		<td><label for="id_leaderboard_player_name">Managing Player</label></td>
@@ -13,7 +14,7 @@
 			{% endfor %}
 			</select>
 		</td>
-		<td></td>
+		<td align="right"></td>
 	</tr>
 	<tr>
 		<td><label for="id_leaderboard_name">Leaderboard Name:</label></td>
@@ -41,6 +42,26 @@
 		<td><input type="text" name="leaderboard_max_participants" value="{{leaderboard.max_participants}}" id="id_leaderboard_max_participants" /></td>
 		<td></td>
 	</tr>
+	
+	
+	<tr>
+		<td><label for="id_allowed_alliances">Allowed Alliances:</label></td>
+		<td><input type="text" name="allowed_alliances" size="64" value="" id="id_allowed_alliances" /></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td><label for="id_allowed_corps">Allowed Corps:</label></td>
+		<td><input type="text" name="allowed_corps" size="64" value="" id="id_allowed_corps" /></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td><label for="id_allowed_pilots">Allowed Pilots:</label></td>
+		<td><input type="text" name="allowed_pilots" size="64" value="" id="id_allowed_pilots" /></td>
+		<td></td>
+	</tr>
+	
+	
+	
 	<tr>
 		<td><label for="id_leaderboard_description">Description:</label></td>
 		<td><textarea rows="8" cols="64" name="leaderboard_description" id="id_leaderboard_description"">
@@ -51,19 +72,15 @@
 	</tr>
 	<tr>
 		<td></td>
-		<td><button type="submit" name="Update" value="{{leaderboard.id}}" class="default">Update</button></td>
+		<td><button type="submit" name="Update" value="{{leaderboard.id}}" class="default">Update</button>
+		
+		</td>
 		<td>
 		</td>
 	</tr>
 	</form>
 	<form action="/player/board_action/" method="post">
 	{% csrf_token %}
-		<tr>
-			<td></td>
-			<td><button type="submit" name="Remove" value="{{leaderboard.id}}" class="default" />Delete</button></td>
-			<td>
-			</td>
-		</tr>	
 	</form>
 	</table>
 

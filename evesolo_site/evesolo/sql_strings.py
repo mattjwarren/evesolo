@@ -407,7 +407,9 @@ sql_public_leaderboards='''select evesolo_leaderboard.id as leaderboardid, eveso
 		inner join evesolo_player on evesolo_player.id=evesolo_leaderboard.player_id
 		where evesolo_leaderboard.id not in
 		(select distinct evesolo_leaderboard.id from evesolo_leaderboard
-		inner join evesolo_leaderboardallowedparticipants on evesolo_leaderboardallowedparticipants.leaderboard_id=evesolo_leaderboard.id
-		inner join  evesolo_leaderboardallowedships on evesolo_leaderboardallowedships.leaderboard_id=evesolo_leaderboard.id
-		inner join evesolo_leaderboardallowedsystems on evesolo_leaderboardallowedsystems.leaderboard_id=evesolo_leaderboard.id)
+		inner join evesolo_leaderboardallowedparticipants on evesolo_leaderboardallowedparticipants.leaderboard_id=evesolo_leaderboard.id)
 		'''
+		
+
+
+

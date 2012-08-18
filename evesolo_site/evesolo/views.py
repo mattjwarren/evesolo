@@ -315,12 +315,15 @@ def get_profile_context(request):
 	context['players']=players
 	return context
 
+@login_required
 def get_managed_boards_context(request):
 	context={}
 	player_managed_leaderboards=[]
 	user_players=Player.objects.filter(user=request.user)
 	pilots_boards=[]
 	all_boards=[]
+	eligible_boards_by_pilot={}
+	
 	for player in user_players:
 		player_pilots=Pilot.objects.filter(player=player)
 		leaderboards=[]
@@ -330,6 +333,8 @@ def get_managed_boards_context(request):
 			accepted_invites=Leaderboardinvites.objects.filter(pilot=pilot,status='ACCEPTED')
 			participating_in_boards=[ inv.leaderboard for inv in accepted_invites ]
 			#monkey patch in the number of current participants
+			#(monkey patches can make templating smoother)
+			#TODO: change this to a property on the model?
 			for participating_in_board in participating_in_boards:
 				number_participating=Leaderboardinvites.objects.filter(leaderboard=participating_in_board,status='ACCEPTED').count()
 				if number_participating==None:
@@ -338,7 +343,22 @@ def get_managed_boards_context(request):
 			if len(participating_in_boards)!=0:
 				all_boards+=participating_in_boards
 				pilots_boards.append((pilot,participating_in_boards))
-						
+			#find boards the pilot can join based on restrictions
+			alliance_participants=Leaderboardallowedparticipants.objects.filter(type='ALLIANCE',name=pilot.alliance)
+			corp_participants=Leaderboardallowedparticipants.objects.filter(type='CORP',name=pilot.corp)
+			pilot_participants=Leaderboardallowedparticipants.objects.filter(type='PILOT',name=pilot.name)
+			all_participants=list(alliance_participants)+list(corp_participants)+list(pilot_participants)
+			all_allowed_boards=[ p.leaderboard for p in all_participants if p.leaderboard not in participating_in_boards ]
+			if all_allowed_boards:
+				eligible_boards_by_pilot[pilot]=all_allowed_boards
+			#monkeypatching
+			#TODO: change this to a property on the model?
+			for participating_in_board in all_allowed_boards:
+				number_participating=Leaderboardinvites.objects.filter(leaderboard=participating_in_board,status='ACCEPTED').count()
+				if number_participating==None:
+					number_participating=0
+				participating_in_board.participant_count=number_participating
+					
 		#player managed leaderboards
 		player_leaderboards=Leaderboard.objects.filter(player=player)
 		for player_leaderboard in player_leaderboards:
@@ -352,7 +372,10 @@ def get_managed_boards_context(request):
 
 	#Player eligible to join leaderboards
 	#by default, eligible for all boards that do not have any allowed participants/ships/systems
-	eligible_leaderboards=get_sql_rows(sql_public_leaderboards)
+	
+	#public boards (boards with no restrictions)
+	public_leaderboards=get_sql_rows(sql_public_leaderboards)
+	
 	
 	
 	#players
@@ -367,13 +390,16 @@ def get_managed_boards_context(request):
 		pilots=None
 	if len(player_managed_leaderboards)==0:
 		player_managed_leaderboards=None
-	if len(eligible_leaderboards)==0:
-		eligible_leaderboards=None
+	if len(public_leaderboards)==0:
+		public_leaderboards=None
 	if len(pilots_boards)==0:
 		pilots_boards=None
-		
+	if not eligible_boards_by_pilot.keys():
+		eligible_boards_by_pilot=None
 	
-	context['eligible_leaderboards']=eligible_leaderboards
+	
+	context['eligible_leaderboards']=public_leaderboards
+	context['eligible_boards_by_pilot']=eligible_boards_by_pilot
 	context['pilots_boards']=pilots_boards
 	context['player_managed_leaderboards']=player_managed_leaderboards
 	context['players']=players
@@ -395,27 +421,37 @@ def join_board(request):
 	if (not request.method=='POST'):
 		manage_boards_context=get_managed_boards_context(request)
 		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))		
-	
-	joining_pilot_name=''
-	if 'joining_pilot_name' in request.POST:
-		joining_pilot_name=request.POST['joining_pilot_name'].strip()
 
-	if len(joining_pilot_name)==0:
-		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='Please give a pilot name.'
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-
+	joining_board_id=None
 	if not 'joining_board_id' in request.POST:
 		manage_boards_context=get_managed_boards_context(request)
 		manage_boards_context['error']='Board not found.'
 		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
 	
+	joining_pilot_name=''
+	if 'joining_pilot_name' in request.POST:
+		joining_pilot_name=request.POST['joining_pilot_name'].strip()
+	elif ':' in request.POST['joining_board_id']:
+		joining_board_id,joining_pilot_name=request.POST['joining_board_id'].split(':')
+		joining_board_id.strip()
+		joining_pilot_name.strip()
+		
+	if len(joining_pilot_name)==0:
+		manage_boards_context=get_managed_boards_context(request)
+		manage_boards_context['error']='Please give a pilot name.'
+		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
+
+	
 	try:
-		joining_board_id=int(request.POST['joining_board_id'])
+		if not joining_board_id:
+			joining_board_id=int(request.POST['joining_board_id'])
+		else:
+			joining_board_id=int(joining_board_id)
 	except ValueError:
 		manage_boards_context=get_managed_boards_context(request)
 		manage_boards_context['error']='Board not found.'
 		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
+
 	
 	#check pilot is registered to any user players,
 	#then the board exists, then make the LEaderboardinvites with status ACCEPTED
@@ -446,10 +482,30 @@ def join_board(request):
 		manage_boards_context['error']='Board not found.'
 		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
 	
+	#check any restrictions if the board has them
+	
+	allowed_alliances=Leaderboardallowedparticipants.objects.filter(leaderboard=board_to_join,type='ALLIANCE')
+	allowed_alliances=[ aa.name for aa in allowed_alliances ]
+	in_alliance=joining_pilot.alliance in allowed_alliances
+	
+	allowed_corps=Leaderboardallowedparticipants.objects.filter(leaderboard=board_to_join,type='CORP')
+	allowed_corps=[ aa.name for aa in allowed_corps ]
+	in_corp=joining_pilot.corp in allowed_corps
+
+	allowed_pilots=Leaderboardallowedparticipants.objects.filter(leaderboard=board_to_join,type='PILOT')
+	allowed_pilots=[ aa.name for aa in allowed_pilots ]
+	in_pilots=joining_pilot.name in allowed_pilots
+	
+	if not (in_alliance or in_corp or in_pilots):
+		manage_boards_context=get_managed_boards_context(request)
+		manage_boards_context['error']='%s has not been invited to %s' % (joining_pilot.name,board_to_join.name)
+		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
+		
+	
 	existing_invites=Leaderboardinvites.objects.filter(leaderboard=board_to_join,pilot=joining_pilot,status='ACCEPTED')
 	if len(existing_invites)>0:
 		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='The pilot is already participating in the leaderboard.'
+		manage_boards_context['error']='%s is already participating in %s' % (joining_pilot.name,board_to_join.name)
 		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
 	
 	#Ok. Create invite for Pilot with status='ACCEPTED'
@@ -552,7 +608,7 @@ def edit_board(request,board_id):
 	except Leaderboard.DoesNotExist:
 		manage_boards_context.update({'error':'Board not found.'})
 		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-	
+		
 	#check board managed by player
 	board_owner=leaderboard_to_edit.player
 	if board_owner not in players:
@@ -560,19 +616,32 @@ def edit_board(request,board_id):
 		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
 
 	#end of profile redirects, setup context for edit_board redirects
-	allowed_participants=Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard_to_edit)
-	allowed_ships=Leaderboardallowedships.objects.filter(leaderboard=leaderboard_to_edit)
-	allowed_systems=Leaderboardallowedsystems.objects.filter(leaderboard=leaderboard_to_edit)
+	#get corp.alliance.pilot lists
+	allowed_alliances=list(Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard_to_edit,type='ALLIANCE'))
+	allowed_corps=list(Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard_to_edit,type='CORP'))
+	allowed_pilots=list(Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard_to_edit,type='PILOT'))
+	
+	if allowed_alliances:
+		allowed_alliances=''.join([ ap.name+',' for ap in allowed_alliances if ap ])
+	if not allowed_alliances: allowed_alliances=''
+	if allowed_corps:
+		allowed_corps=''.join([ ap.name+',' for ap in allowed_corps  if ap ])
+	if not allowed_corps: allowed_corps=''
+	if allowed_pilots:
+		allowed_pilots=''.join([ ap.name+',' for ap in allowed_pilots  if ap ])
+	if not allowed_pilots: allowed_pilots=''
+		
+	#allowed_ships=Leaderboardallowedships.objects.filter(leaderboard=leaderboard_to_edit)
+	#allowed_systems=Leaderboardallowedsystems.objects.filter(leaderboard=leaderboard_to_edit)
+	
 	
 	context=dict()
-	context['allowed_participants']=allowed_participants
-	context['allowed_ships']=allowed_ships
-	context['allowed_systems']=allowed_systems
-	context['players']=players
-	#TODO: Phase 2 add in pilots that are in this board and enable managment of them
-	context={'leaderboard':leaderboard_to_edit}
 	context.update(manage_boards_context)
-
+	context['players']=players
+	context={'leaderboard':leaderboard_to_edit}
+	context['allowed_alliances']=allowed_alliances
+	context['allowed_corps']=allowed_corps
+	context['allowed_pilots']=allowed_pilots
 	
 	#if request has no POST or any bad POST, redirect back to form
 	if (not request.method=='POST'):
@@ -659,8 +728,34 @@ def edit_board(request,board_id):
 	new_description=leaderboard_description
 	if (old_description!=new_description) and (len(new_description.strip())>3):
 		leaderboard_to_edit.description=new_description
-		
+
 	save_object(leaderboard_to_edit,request)
+	
+	#Now the allowed alliances/corps/pilots
+	#first, clear current and then re-set
+	alliances=request.POST['allowed_alliances'].split(',')
+	corps=request.POST['allowed_corps'].split(',')
+	pilots=request.POST['allowed_pilots'].split(',')
+	Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard_to_edit).delete()
+	for alliance in [ a for a in alliances if a ]:
+		lap=Leaderboardallowedparticipants()
+		lap.leaderboard=leaderboard_to_edit
+		lap.type='ALLIANCE'
+		lap.name=alliance.strip()
+		lap.save()
+	for corp in [ c for c in corps if c ]:
+		lap=Leaderboardallowedparticipants()
+		lap.leaderboard=leaderboard_to_edit
+		lap.type='CORP'
+		lap.name=corp.strip()
+		lap.save()
+	for pilot in [ p for p in pilots if p ]:
+		lap=Leaderboardallowedparticipants()
+		lap.leaderboard=leaderboard_to_edit
+		lap.type='PILOT'
+		lap.name=pilot.strip()
+		lap.save()
+	
 	
 	return HttpResponseRedirect(reverse('evesolo.views.manage_boards'))
 	
@@ -699,6 +794,8 @@ def add_leaderboard(request):
 		manage_boards_context.update({'error':'You must add a player to your account before you can add a leaderboard to a player.'})
 		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
 
+	
+	
 	if not request.method=='POST' or ('leaderboard_name' not in request.POST):
 		return render_to_response('evesolo/add_leaderboard.html',manage_boards_context,context_instance=RequestContext(request))
 	
@@ -747,6 +844,7 @@ def add_leaderboard(request):
 		manage_boards_context['error']='Please enter a description (at least 3 characters) for the leaderboard.'
 		return render_to_response('evesolo/add_leaderboard.html',manage_boards_context,context_instance=RequestContext(request))
 
+	
 	#Check the leaderboard is not asociated with another player
 	leaderboard=get_or_create_leaderboard(name=leaderboard_name,manager=managing_player)
 	#if any of the fields are set, then this leaderbaord already existed
@@ -766,6 +864,31 @@ def add_leaderboard(request):
 	leaderboard.player=managing_player
 	leaderboard.description=leaderboard_description
 	save_object(leaderboard,request)
+	#Now the allowed alliances/corps/pilots
+	#first, clear current and then re-set
+	alliances=request.POST['allowed_alliances'].split(',')
+	corps=request.POST['allowed_corps'].split(',')
+	pilots=request.POST['allowed_pilots'].split(',')
+	Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard).delete()
+	for alliance in [ a for a in alliances if a ]:
+		lap=Leaderboardallowedparticipants()
+		lap.leaderboard=leaderboard
+		lap.type='ALLIANCE'
+		lap.name=alliance.strip()
+		lap.save()
+	for corp in [ c for c in corps if c ]:
+		lap=Leaderboardallowedparticipants()
+		lap.leaderboard=leaderboard
+		lap.type='CORP'
+		lap.name=corp.strip()
+		lap.save()
+	for pilot in [ p for p in pilots if p ]:
+		lap=Leaderboardallowedparticipants()
+		lap.leaderboard=leaderboard
+		lap.type='PILOT'
+		lap.name=pilot.strip()
+		lap.save()
+
 	return HttpResponseRedirect(reverse('evesolo.views.manage_boards'))	
 
 	

@@ -14,7 +14,7 @@
 	</tr>
 	<tr>
 		<td><label for="id_leaderboard_name">Leaderboard Name:</label></td>
-		<td><input type="text" name="leaderboard_name" id="id_leaderboard_name" /></td>
+		<td><input type="text" name="leaderboard_name" size="64" id="id_leaderboard_name" /></td>
 	</tr>
 	<tr>
 		<td><label for="id_leaderboard_ranks">Ranks Displayed:</label></td>
@@ -46,11 +46,19 @@
 		<td><input type="text" name="allowed_pilots" size="64" value="{{allowed_pilots}}" id="id_allowed_pilots" /></td>
 		<td></td>
 	</tr>
-
+	<tr>
+		<td><label for="id_allow_friendly_kills">Allow Friendly Kills<br/>(kills against own corp or alliance):</label></td>
+		<td><input type="checkbox" name="allow_friendly_kills" {% if friendly_kills_allowed %}checked{% else %} empty {% endif %} value="True" id="id_allow_friendly_kills" /></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td><label for="id_allow_competitor_kills">Allow Competitor Kills<br/>(overrides allow friendly):</label></td>
+		<td><input type="checkbox" name="allow_competitor_kills" {% if competitor_kills_allowed %}checked{% else %} empty {% endif %} value="True" id="id_allow_competitor_kills" /></td>
+		<td></td>
+	</tr>
 	<tr>
 		<td><label for="id_leaderboard_description">Description:</label></td>
-		<td><textarea rows="8" cols="64" name="leaderboard_description" id="id_leaderboard_description">
-			</textarea></td>
+		<td><textarea rows="8" cols="64" name="leaderboard_description" id="id_leaderboard_description"></textarea></td>
 	</tr>
 	<tr>
 		<td></td>

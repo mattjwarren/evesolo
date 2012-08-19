@@ -18,7 +18,7 @@
 	</tr>
 	<tr>
 		<td><label for="id_leaderboard_name">Leaderboard Name:</label></td>
-		<td><input type="text" name="leaderboard_name" value="{{leaderboard.name}}" id="id_leaderboard_name" /></td>
+		<td><input type="text" name="leaderboard_name" size="64" value="{{leaderboard.name}}" id="id_leaderboard_name" /></td>
 		<td></td>
 	</tr>
 	<tr>
@@ -46,28 +46,32 @@
 	
 	<tr>
 		<td><label for="id_allowed_alliances">Allowed Alliances:</label></td>
-		<td><input type="text" name="allowed_alliances" size="64" value="" id="id_allowed_alliances" /></td>
+		<td><input type="text" name="allowed_alliances" size="64" value="{{allowed_alliances}}" id="id_allowed_alliances" /></td>
 		<td></td>
 	</tr>
 	<tr>
 		<td><label for="id_allowed_corps">Allowed Corps:</label></td>
-		<td><input type="text" name="allowed_corps" size="64" value="" id="id_allowed_corps" /></td>
+		<td><input type="text" name="allowed_corps" size="64" value="{{allowed_corps}}" id="id_allowed_corps" /></td>
 		<td></td>
 	</tr>
 	<tr>
 		<td><label for="id_allowed_pilots">Allowed Pilots:</label></td>
-		<td><input type="text" name="allowed_pilots" size="64" value="" id="id_allowed_pilots" /></td>
+		<td><input type="text" name="allowed_pilots" size="64" value="{{allowed_pilots}}" id="id_allowed_pilots" /></td>
 		<td></td>
 	</tr>
-	
-	
-	
+	<tr>
+		<td><label for="id_allow_friendly_kills">Allow Friendly Kills<br/>(kills against own corp or alliance):</label></td>
+		<td><input type="checkbox" name="allow_friendly_kills" {% if leaderboard.allow_friendly_kills %}checked{% else %} empty {% endif %} value="True" id="id_allow_friendly_kills" /></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td><label for="id_allow_competitor_kills">Allow Competitor Kills<br/>(overrides allow friendly):</label></td>
+		<td><input type="checkbox" name="allow_competitor_kills" {% if leaderboard.allow_leaderboard_kills %}checked{% else %} empty {% endif %} value="True" id="id_allow_competitor_kills" /></td>
+		<td></td>
+	</tr>
 	<tr>
 		<td><label for="id_leaderboard_description">Description:</label></td>
-		<td><textarea rows="8" cols="64" name="leaderboard_description" id="id_leaderboard_description"">
-			{{leaderboard.description}}
-			</textarea>
-		</td>
+		<td><textarea rows="8" cols="64" name="leaderboard_description" id="id_leaderboard_description">{{leaderboard.description}}</textarea></td>
 		<td></td>
 	</tr>
 	<tr>

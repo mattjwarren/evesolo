@@ -615,7 +615,7 @@ def edit_board(request,board_id):
 		manage_boards_context.update({'error':'You do not manage that board.'})
 		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
 
-	#end of profile redirects, setup context for edit_board redirects
+	#end of manage board redirects, setup context for edit_board redirects
 	#get corp.alliance.pilot lists
 	allowed_alliances=list(Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard_to_edit,type='ALLIANCE'))
 	allowed_corps=list(Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard_to_edit,type='CORP'))
@@ -633,6 +633,7 @@ def edit_board(request,board_id):
 		
 	#allowed_ships=Leaderboardallowedships.objects.filter(leaderboard=leaderboard_to_edit)
 	#allowed_systems=Leaderboardallowedsystems.objects.filter(leaderboard=leaderboard_to_edit)
+	
 	
 	
 	context=dict()
@@ -682,11 +683,17 @@ def edit_board(request,board_id):
 		leaderboard_max_participants=leaderboard_to_edit.max_participants
 		
 	if 'leaderboard_description' in request.POST:
-		leaderboard_description=request.POST['leaderboard_description'].upper()
+		leaderboard_description=request.POST['leaderboard_description'].strip()
 	else:
-		leaderboard_description=leaderboard_to_edit.description
-			
+		leaderboard_description=leaderboard_to_edit.description.strip()
 	
+	friendly_kills_allowed=False
+	if 'allow_friendly_kills' in request.POST:
+		friendly_kills_allowed=request.POST['allow_friendly_kills']=='True'
+	competitor_kills_allowed=False
+	if 'allow_competitor_kills' in request.POST:
+		competitor_kills_allowed=request.POST['allow_competitor_kills']=='True'
+		
 	
 	#Its a good one, lets make the changes
 	old_player=leaderboard_to_edit.player
@@ -724,10 +731,20 @@ def edit_board(request,board_id):
 	if old_max_participants!=new_max_participants:
 		leaderboard_to_edit.max_participants=new_max_participants
 		
-	old_description=leaderboard_to_edit.description
+	old_description=leaderboard_to_edit.description.strip()
 	new_description=leaderboard_description
 	if (old_description!=new_description) and (len(new_description.strip())>3):
 		leaderboard_to_edit.description=new_description
+
+	##friendly/competitor kills
+	if friendly_kills_allowed:
+		leaderboard_to_edit.allow_friendly_kills=1
+	else:
+		leaderboard_to_edit.allow_friendly_kills=0
+	if competitor_kills_allowed:
+		leaderboard_to_edit.allow_leaderboard_kills=1
+	else:
+		leaderboard_to_edit.allow_leaderboard_kills=0	
 
 	save_object(leaderboard_to_edit,request)
 	
@@ -844,11 +861,15 @@ def add_leaderboard(request):
 		manage_boards_context['error']='Please enter a description (at least 3 characters) for the leaderboard.'
 		return render_to_response('evesolo/add_leaderboard.html',manage_boards_context,context_instance=RequestContext(request))
 
+	friendly_kills_allowed=request.POST['allow_friendly_kills']
+	competitor_kills_allowed=request.POST['allow_competitor_kills']
+	
+	
 	
 	#Check the leaderboard is not asociated with another player
 	leaderboard=get_or_create_leaderboard(name=leaderboard_name,manager=managing_player)
 	#if any of the fields are set, then this leaderbaord already existed
-	if leaderboard.description!='':
+	if leaderboard.description!='':#cheap way to check if was got or created
 		manage_boards_context['error']='You already manage a board with that name, please choose another'
 		return render_to_response('evesolo/add_leaderboard.html',manage_boards_context,context_instance=RequestContext(request))
 	save_object(leaderboard,request)
@@ -862,8 +883,22 @@ def add_leaderboard(request):
 	leaderboard.max_participants=leaderboard_max_participants_int
 	leaderboard.rank_style=leaderboard_rank_style.upper()
 	leaderboard.player=managing_player
-	leaderboard.description=leaderboard_description
+	leaderboard.description=leaderboard_description.strip()
+	##friendly/competitor kills
+	if friendly_kills_allowed:
+		leaderboard.allow_friendly_kills=1
+	else:
+		leaderboard.allow_friendly_kills=0
+	if competitor_kills_allowed:
+		leaderboard.allow_leaderboard_kills=1
+	else:
+		leaderboard.allow_leaderboard_kills=0
+		
+		
 	save_object(leaderboard,request)
+	
+	
+	
 	#Now the allowed alliances/corps/pilots
 	#first, clear current and then re-set
 	alliances=request.POST['allowed_alliances'].split(',')
@@ -1914,6 +1949,10 @@ def manage_kills(request):
 			return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
 		
 		added_count=0
+		not_invited=0
+		not_allowed_competitor=0
+		not_allowed_friendly=0
+		already_entered=0
 		for solokill_id in solokills_to_add:
 			try:
 				solokill_id=int(solokill_id)
@@ -1922,20 +1961,56 @@ def manage_kills(request):
 				continue
 			
 			pilot_to_add=solokill.winning_pilot
-					
+			
 			pilot_invite=Leaderboardinvites.objects.filter(leaderboard=board_to_enter,pilot=pilot_to_add,status="ACCEPTED").count()
 			if pilot_invite==0:
+				not_invited+=1
 				continue
+			
+			#is kill leaderboard restricted by Friends / competitors?
+			friendly_allowed=board_to_enter.allow_friendly_kills
+			competitor_allowed=board_to_enter.allow_leaderboard_kills
+			
+			losing_pilot=solokill.losing_pilot
+			looser_alliance=losing_pilot.alliance
+			looser_corp=losing_pilot.corp
+			looser_friendly=(looser_alliance==pilot_to_add.alliance) or (looser_corp==pilot_to_add.corp)
+			looser_competitor=Leaderboardinvites.objects.filter(leaderboard=board_to_enter,pilot=losing_pilot).count()>0
+			
+			#if looser is a competitor, and competitors are not allowe, then refuse regardless sof friendly status
+			if (looser_competitor) and (not competitor_allowed):
+				not_allowed_competitor+=1
+				continue
+			if (looser_friendly) and (not friendly_allowed):
+				not_allowed_friendly+=1
+				continue
+			
 			try:
 				Leaderboardkills.objects.get(leaderboard=board_to_enter,solokill=solokill)
+				#
+				already_entered+=1
 			except Leaderboardkills.DoesNotExist:
 				leaderboard_kill=Leaderboardkills(leaderboard=board_to_enter,solokill=solokill)
 				save_object(leaderboard_kill,request)
 				added_count+=1
-		if added_count==0:
-			context['error']='No new leaderboard entries were made.'
-		else:
-			context['message']='%d of %d entries made.' % (added_count,len(solokills_to_add))
+				
+		error_list=[]
+		not_allowed=not_allowed_competitor+not_allowed_friendly+already_entered
+		
+		if (not_allowed==0) and (not_invited==0):
+			context['message']='All Kills succesfully entered.' % (added_count,len(solokills_to_add))
+		elif not_allowed>0:
+			if not_allowed_competitor:
+				error_list.append('%d Competitor kills not allowed.' % not_allowed_competitor)
+			if not_allowed_friendly:
+				error_list.append('%d Friendly kills not allowed.' % not_allowed_friendly)
+			if not_invited>0:
+				error_list.append('%d Kills refused, pilot not competing in board.' % not_invited)
+			if already_entered>0:
+				error_list.append('%d Kills refused, already entered.' % already_entered)
+			if added_count:
+				error_list.append('...%d Kills succesfully entered.') % added_count
+			context['error']='<br/>'.join(error_list)
 		return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
 
 	return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))

@@ -111,7 +111,9 @@ class Leaderboard(models.Model):
 	rank_style=models.CharField(max_length=14)
 	player=models.ForeignKey(Player,null=False)
 	description=models.CharField(max_length=512)
-	
+	allow_friendly_kills=models.IntegerField(null=False,default=0)
+	allow_leaderboard_kills=models.IntegerField(null=False,default=0)
+
 	def __unicode__(self):
 		return '%s managed by player %s' % (self.name, self.player.name)
 	

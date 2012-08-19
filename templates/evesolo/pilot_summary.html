@@ -8,6 +8,12 @@
 	{% endif %}
 <ul>
 	<li><h2>{{pilot.name}}</h2></li>
+	<li>Corp: {{pilot.corp}}</li>
+	{% if pilot.alliance %}
+	<li>Alliance: {{pilot.alliance}}</li>
+	{% endif %}
+</ul><br/>
+<ul>
 	{% if participating_in_boards %}
 	<li><a href="/pilot/{{pilot.id}}/">Evesolo Board</a>
 		{% for board in participating_in_boards %}

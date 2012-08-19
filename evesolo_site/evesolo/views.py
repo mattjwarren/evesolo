@@ -1068,15 +1068,18 @@ def add_pilot(request):
 		return render_to_response('evesolo/add_pilot.html',{'error':'Please supply a pilot name.','players':players},context_instance=RequestContext(request))
 	
 	#check the given API details are for the given pilot name, if so, add or create pilot, set key details and associate with player
-	try:
-		key_id=int(request.POST['ID'])
-		key_vCode=request.POST['vCode']
-		cachedAPI=eveapi.EVEAPIConnection(cacheHandler=eveapi_cachehandler.CacheHandler(cache_dir='C:/web/www/evesolo_com/evesolo_site/eve_api_cache'))
-		api_conn=cachedAPI.auth(keyID=key_id,vCode=key_vCode)
-		api_char=api_conn.account.Characters().characters[0]
-		char_name=api_char.name
-	except:
-		return render_to_response('evesolo/add_pilot.html',{'error':'There was a problem with the API details provided.','players':players},context_instance=RequestContext(request))
+	####try:
+	key_id=int(request.POST['ID'])
+	key_vCode=request.POST['vCode']
+	cachedAPI=eveapi.EVEAPIConnection(cacheHandler=eveapi_cachehandler.CacheHandler(cache_dir='C:/web/www/evesolo_com/evesolo_site/eve_api_cache'))
+	api_conn=cachedAPI.auth(keyID=key_id,vCode=key_vCode)
+	api_char=api_conn.account.Characters().characters[0]
+	char_name=api_char.name
+	api_char_alliance=api_conn.eve.CharacterInfo(characterID=api_char.characterID,userID=key_id,apiKey=key_vCode).alliance
+
+		
+	####except:
+		####return render_to_response('evesolo/add_pilot.html',{'error':'There was a problem with the API details provided.','players':players},context_instance=RequestContext(request))
 	if char_name!=pilot_name:
 		return render_to_response('evesolo/add_pilot.html',{'error':'The API details provided are not for the pilot specified.','players':players},context_instance=RequestContext(request))
 	
@@ -1092,8 +1095,8 @@ def add_pilot(request):
 
 	pilot.api_key='[[%s]]%s' % (key_id,key_vCode)
 	pilot.player=player
-	pilot.corp=''
-	pilot.alliance=''
+	pilot.corp=api_char.corporationName
+	pilot.alliance=api_char_alliance
 	pilot.faction=''
 	save_object(pilot,request)
 		
@@ -2021,7 +2024,3 @@ def manage_kills(request):
 		return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
 
 	return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
-
-		 
-		 
-		 

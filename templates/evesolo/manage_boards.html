@@ -1,9 +1,8 @@
 {% extends "evesolo/base.html" %}
 {% block content %}
 <h1>Your Boards</h1>
-</br>
 <h4>Pilot Invites</h4>
-{% if eligible_leaderboards %}
+{% if eligible_boards_by_pilot %}
 <form action="/pilot/join_board/" method="post">
 {% csrf_token %}
 	<div class="leaderboardpanel">
@@ -44,7 +43,7 @@
 	</div>
 </form>
 {% else %}
-No leaderboards available.</br>
+No invites right now.</br>
 {% endif %}
 
 <h4>Pilots in Boards</h4>

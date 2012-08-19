@@ -45,7 +45,49 @@
 {% else %}
 No invites right now.</br>
 {% endif %}
-
+<h4>Public Invites</h4>
+{% if eligible_leaderboards %}
+<form action="/pilot/join_board/" method="post">
+{% csrf_token %}
+	<div class="leaderboardpanel">
+		<div class="leaderboardpanelinner">
+			<table class="leaderboardpaneltable">
+				<tr class="boardheader">
+					<td><center>
+						<select name="joining_pilot_name" id="id_joining_pilot_name">
+						{% for pilot in pilots %}
+							<option value="{{pilot.name}}">{{pilot.name}}</option>
+							
+						{% endfor %}
+						</select>
+						</center>
+					</td>
+					<td>Leaderboard</td>
+					<td>Owner</td>
+					<td>Ranks</td>
+					<td>Rank Method</td>
+					<td>Pilots</td>
+					<td>Description</td>
+				</tr>
+				{% for id,name,ranks,participants,max_participants,rank_style,owner,desc in eligible_leaderboards %}
+				<tr id="tr_dark">
+					<td class="leaderboard"><center><button type="submit" name="joining_board_id" value="{{id}}" class="default" />Join</button>
+					</center></td>
+					<td class="leaderboard"><a href="/leaderboards_custom/{{id}}/">{{name}}</a></td>
+					<td class="leaderboard">{{owner}}</td>
+					<td class="leaderboard">{{ranks}}</td>
+					<td class="leaderboard">{{rank_style}}</td>
+					<td class="leaderboard">{{participants}} / {{max_participants}}</td>
+					<td class="leaderboard">{{desc}}</td>
+				</tr>
+				{% endfor %}
+			</table>
+		</div>
+	</div>
+</form>
+{% else %}
+No leaderboards available.</br>
+{% endif %}
 <h4>Pilots in Boards</h4>
 {% if pilots_boards %}
 <form action="/pilot/leave_board/" method="post">
@@ -93,50 +135,6 @@ No invites right now.</br>
 {% else %}
 No participating pilots.</br>
 {% endif %}
-<h4>Public Invites</h4>
-{% if eligible_leaderboards %}
-<form action="/pilot/join_board/" method="post">
-{% csrf_token %}
-	<div class="leaderboardpanel">
-		<div class="leaderboardpanelinner">
-			<table class="leaderboardpaneltable">
-				<tr class="boardheader">
-					<td><center>
-						<select name="joining_pilot_name" id="id_joining_pilot_name">
-						{% for pilot in pilots %}
-							<option value="{{pilot.name}}">{{pilot.name}}</option>
-							
-						{% endfor %}
-						</select>
-						</center>
-					</td>
-					<td>Leaderboard</td>
-					<td>Owner</td>
-					<td>Ranks</td>
-					<td>Rank Method</td>
-					<td>Pilots</td>
-					<td>Description</td>
-				</tr>
-				{% for id,name,ranks,participants,max_participants,rank_style,owner,desc in eligible_leaderboards %}
-				<tr id="tr_dark">
-					<td class="leaderboard"><center><button type="submit" name="joining_board_id" value="{{id}}" class="default" />Join</button>
-					</center></td>
-					<td class="leaderboard"><a href="/leaderboards_custom/{{id}}/">{{name}}</a></td>
-					<td class="leaderboard">{{owner}}</td>
-					<td class="leaderboard">{{ranks}}</td>
-					<td class="leaderboard">{{rank_style}}</td>
-					<td class="leaderboard">{{participants}} / {{max_participants}}</td>
-					<td class="leaderboard">{{desc}}</td>
-				</tr>
-				{% endfor %}
-			</table>
-		</div>
-	</div>
-</form>
-{% else %}
-No leaderboards available.</br>
-{% endif %}
-
 <form action="/player/board_action/" method="post">
 	{% csrf_token %}
 	<h4>Your Boards</h4>
@@ -184,6 +182,8 @@ No leaderboards available.</br>
 {% else %}
 No leaderboards available</br>
 {% endif %}
+
+
 {% endblock content %}
 			
 	

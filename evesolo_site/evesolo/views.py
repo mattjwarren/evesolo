@@ -1106,7 +1106,7 @@ def pull_mails(request):
 
 	#get this from DB
 #	highest_kill_id=22991713
-	highest_kill_id=1
+	highest_kill_id=22999999#12734501
 	dupe_limit=20 #maybe maybe not
 	log('starting Highest Kill ID is'+str(highest_kill_id))
 	while getting_killmails:
@@ -1130,7 +1130,7 @@ def pull_mails(request):
 					print 'Highest seen killid is',highest_kill_id
 				except AttributeError:
 					pass
-				print 'Malformed kill from API pull'
+				#print 'Malformed kill from API pull'
 				continue
 			
 			if KM.kill_id in seen_kill_ids:
@@ -1140,13 +1140,13 @@ def pull_mails(request):
 			else:
 				seen_kill_ids.add(KM.kill_id)
 			highest_kill_id=max(highest_kill_id,KM.kill_id)
-			print 'Highest seen killid is',highest_kill_id
+			#print 'Highest seen killid is',highest_kill_id
 			if KM.is_solo_mail():
 				losing_pilot_info=get_km_losing_pilot_info(killmail=KM)
 				
 				#Do we understand the shiptype?
 				if not losing_pilot_info['ship']:
-					print "LOSING PILOT IS A WHAT?"
+					#print "LOSING PILOT IS A WHAT?"
 					#LOG THIS SOMEWHERE...
 					continue
 				
@@ -1248,7 +1248,7 @@ def pull_mails(request):
 				existing_sk=Solokill.objects.filter(losing_pilot__name=KM.victim['Victim:'],
 													kill_date=KM.kill_date)
 				if len(existing_sk)!=0:
-					print 'DISPUTE:: deleting - discovered previous solokill but with many parties on new kill'
+					#print 'DISPUTE:: deleting - discovered previous solokill but with many parties on new kill'
 					disputed_mails+=1
 					#existing_sk.delete() leave it in only one of the fakes will ever be validated from a real api pull
 					#

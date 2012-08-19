@@ -1985,6 +1985,8 @@ def manage_kills(request):
 				not_allowed_friendly+=1
 				continue
 			
+			#if solokill isnt verified, say no
+			
 			try:
 				Leaderboardkills.objects.get(leaderboard=board_to_enter,solokill=solokill)
 				#
@@ -2010,7 +2012,7 @@ def manage_kills(request):
 				error_list.append('%d Kills refused, already entered.' % already_entered)
 			if added_count:
 				error_list.append('...%d Kills succesfully entered.') % added_count
-			context['error']='<br/>'.join(error_list)
+			context['error']='</br></br>'.join(error_list)
 		return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
 
 	return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))

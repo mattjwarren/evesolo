@@ -9,7 +9,7 @@ urlpatterns = patterns('',
 	
 	
 	url(r'^newmail/$','evesolo.views.newmail'),
-	url(r'^postmail/$','evesolo.views.postmail'),
+#	url(r'^postmail/$','evesolo.views.postmail'),
 	
 	
 	url(r'^kills/$','evesolo.views.latestkills'),

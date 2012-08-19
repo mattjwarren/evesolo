@@ -113,7 +113,7 @@ class Leaderboard(models.Model):
 	description=models.CharField(max_length=512)
 	allow_friendly_kills=models.IntegerField(null=False,default=0)
 	allow_leaderboard_kills=models.IntegerField(null=False,default=0)
-
+	start_date=models.DateTimeField(null=False,auto_now_add=True)
 	def __unicode__(self):
 		return '%s managed by player %s' % (self.name, self.player.name)
 	

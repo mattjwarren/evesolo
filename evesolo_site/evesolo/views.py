@@ -1953,13 +1953,19 @@ def manage_kills(request):
 		not_allowed_competitor=0
 		not_allowed_friendly=0
 		already_entered=0
+		kills_not_verified=0
 		for solokill_id in solokills_to_add:
 			try:
 				solokill_id=int(solokill_id)
 				solokill=Solokill.objects.get(id=solokill_id)
 			except Solokill.DoesNotExist:
 				continue
-			
+
+			#if solokill isnt verified, say no
+			if not solokill.verified:
+				kills_not_verified+=1
+				continue
+
 			pilot_to_add=solokill.winning_pilot
 			
 			pilot_invite=Leaderboardinvites.objects.filter(leaderboard=board_to_enter,pilot=pilot_to_add,status="ACCEPTED").count()
@@ -1985,7 +1991,6 @@ def manage_kills(request):
 				not_allowed_friendly+=1
 				continue
 			
-			#if solokill isnt verified, say no
 			
 			try:
 				Leaderboardkills.objects.get(leaderboard=board_to_enter,solokill=solokill)
@@ -1997,7 +2002,7 @@ def manage_kills(request):
 				added_count+=1
 				
 		error_list=[]
-		not_allowed=not_allowed_competitor+not_allowed_friendly+already_entered
+		not_allowed=not_allowed_competitor+not_allowed_friendly+already_entered+kills_not_verified
 		
 		if (not_allowed==0) and (not_invited==0):
 			context['message']='All Kills succesfully entered.' % (added_count,len(solokills_to_add))
@@ -2009,10 +2014,12 @@ def manage_kills(request):
 			if not_invited>0:
 				error_list.append('%d Kills refused, pilot not competing in board.' % not_invited)
 			if already_entered>0:
-				error_list.append('%d Kills refused, already entered.' % already_entered)
+				error_list.append('%d Kills refused, kills already entered into board.' % already_entered)
+			if kills_not_verified>0:
+				error_list.append('%d Kills refused, not verified.' % kills_not_verified)
 			if added_count:
-				error_list.append('...%d Kills succesfully entered.') % added_count
-			context['error']='</br></br>'.join(error_list)
+				error_list.append('...%d other Kills succesfully entered.') % added_count
+			context['error']='</br>'.join(error_list)
 		return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
 
 	return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))

@@ -861,9 +861,12 @@ def add_leaderboard(request):
 		manage_boards_context['error']='Please enter a description (at least 3 characters) for the leaderboard.'
 		return render_to_response('evesolo/add_leaderboard.html',manage_boards_context,context_instance=RequestContext(request))
 
-	friendly_kills_allowed=request.POST['allow_friendly_kills']
-	competitor_kills_allowed=request.POST['allow_competitor_kills']
-	
+	friendly_kills_allowed=False
+	if 'allow_friendly_kills' in request.POST:
+		friendly_kills_allowed=request.POST['allow_friendly_kills']=='True'
+	competitor_kills_allowed=False
+	if 'allow_competitor_kills' in request.POST:
+		competitor_kills_allowed=request.POST['allow_competitor_kills']=='True'	
 	
 	
 	#Check the leaderboard is not asociated with another player
@@ -1192,18 +1195,7 @@ def pull_mails(request):
 					continue
 				
 				#Are the players in the same alliance or corp?
-				
-				##NOTE: This will be togglable when corp/alliance/user leaderboards are implemented
-				if winning_pilot_info['corp']==losing_pilot_info['corp']:
-					same_corp_kills+=1
-					continue
-				wining_pilot_alliance=winning_pilot_info['alliance']
-				losing_pilot_alliance=losing_pilot_info['alliance']
-				if (wining_pilot_alliance not in ['',None]) and (losing_pilot_alliance not in ['',None]):
-					if wining_pilot_alliance==losing_pilot_alliance:
-						same_alliance_kills+=1
-						continue
-				
+				# .. removed:- we dont care in the evesolo boards anymore, settable in private				
 				
 				
 				#we get dateime object from eveapi not string so ..
@@ -1460,7 +1452,7 @@ def class_leaderboard(request,hullclass_id,verified=False):
 def newmail(request):
 	return render_to_response('evesolo/newmail.html',context_instance=RequestContext(request))
 
-	
+#NOT USED
 def postmail(request):
 	if request.method=='POST':
 		KM=km_parser.EveKillmail()
@@ -1954,6 +1946,7 @@ def manage_kills(request):
 		not_allowed_friendly=0
 		already_entered=0
 		kills_not_verified=0
+		too_old=0
 		for solokill_id in solokills_to_add:
 			try:
 				solokill_id=int(solokill_id)
@@ -1965,7 +1958,10 @@ def manage_kills(request):
 			if not solokill.verified:
 				kills_not_verified+=1
 				continue
-
+			#if its too old bye bye
+			if solokill.kill_date<board_to_enter.start_date:
+				too_old+=1
+				continue
 			pilot_to_add=solokill.winning_pilot
 			
 			pilot_invite=Leaderboardinvites.objects.filter(leaderboard=board_to_enter,pilot=pilot_to_add,status="ACCEPTED").count()
@@ -2002,9 +1998,9 @@ def manage_kills(request):
 				added_count+=1
 				
 		error_list=[]
-		not_allowed=not_allowed_competitor+not_allowed_friendly+already_entered+kills_not_verified
+		not_allowed=not_allowed_competitor+not_allowed_friendly+already_entered+kills_not_verified+too_old+not_invited
 		
-		if (not_allowed==0) and (not_invited==0):
+		if not_allowed==0:
 			context['message']='All Kills succesfully entered.' % (added_count,len(solokills_to_add))
 		elif not_allowed>0:
 			if not_allowed_competitor:
@@ -2017,8 +2013,10 @@ def manage_kills(request):
 				error_list.append('%d Kills refused, kills already entered into board.' % already_entered)
 			if kills_not_verified>0:
 				error_list.append('%d Kills refused, not verified.' % kills_not_verified)
+			if too_old>0:
+				error_list.append('%d Kills refused, kills are too old.' % too_old)
 			if added_count:
-				error_list.append('...%d other Kills succesfully entered.') % added_count
+				context['message'].append('...%d other Kills succesfully entered.') % added_count
 			context['error']='</br>'.join(error_list)
 		return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
 

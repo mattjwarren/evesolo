@@ -1,6 +1,10 @@
 # Django settings for evesolo_site project.
 
 ### Testing/Dev site flags - set to False in all cases for production
+TEST_FS_CACHE='C:/web/www/evesolo_com_test/evesolo_site/eve_api_cache'
+DEV_FS_CACHE='C:/web/www/evesolo_com_dev/evesolo_site/eve_api_cache'
+FS_CACHE='C:/web/www/evesolo_com/evesolo_site/eve_api_cache'
+
 TEST = False
 TEST_DB = False
 DEV = True
@@ -15,7 +19,17 @@ ADMINS = (
 )
 
 MANAGERS = ADMINS
-#not
+
+#setup eve api caching
+if not (TEST or DEV):
+	EVE_API_CACHE=FS_CACHE
+else:
+	if TEST:
+		EVE_API_CACHE=TEST_FS_CACHE
+	elif DEV:
+		EVE_API_CACHE=DEV_FS_CACHE
+
+
 if not (TEST_DB or DEV_DB):
 	DATABASES = {
 		'default': {

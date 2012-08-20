@@ -2,11 +2,9 @@ from django.http import HttpResponse,HttpResponseRedirect
 from django.shortcuts import render_to_response
 from models import Solokill, Pilot, Player, Ship, Hullclass, Leaderboard, Leaderboardallowedparticipants
 from models import Leaderboardallowedships,Leaderboardallowedsystems, Leaderboardinvites,Leaderboardkills
-
+from django.conf import settings
 #from evesolo.models import Solokill, Pilot, Player, Ship, Hullclass, Leaderboard, Leaderboardallowedparticipants
 #from evesolo.models import Leaderboardallowedships,Leaderboardallowedsystems, Leaderboardinvites
-
-
 
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
@@ -25,6 +23,7 @@ import km_parser
 from sql_strings import *
 import eveapi_cachehandler
 import eveapi
+
 
 from exceptions import Exception
 
@@ -77,7 +76,7 @@ def get_api_connection_for_pilot(pilot_id=None):
 		pilot.vCode_id=key_id
 		pilot.vCode=key_vCode
 		
-		cachedAPI=eveapi.EVEAPIConnection(cacheHandler=eveapi_cachehandler.CacheHandler(cache_dir='C:/web/www/evesolo_com/evesolo_site/eve_api_cache'))
+		cachedAPI=eveapi.EVEAPIConnection(cacheHandler=eveapi_cachehandler.CacheHandler(cache_dir=settings.EVE_API_CACHE))
 		api_conn=cachedAPI.auth(keyID=key_id,vCode=key_vCode)
 		try:
 			api_char=api_conn.account.Characters().characters[0]

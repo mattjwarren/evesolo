@@ -180,9 +180,11 @@ def calculate_kill_points(Lp,Wp):
 
 def update_or_create_pilot(request,pilot_info):
 	pilot=get_or_create_pilot(name=pilot_info['name'])
-	pilot.corp=pilot_info['corp']
-	pilot.alliance=pilot_info['alliance']
-	pilot.faction=pilot_info['faction']
+	#/removed stop killmail pulls from overriding api pilot info
+	#((this can be done as we only accept api-pulled mails now, not hand posted))
+###	pilot.corp=pilot_info['corp']
+###	pilot.alliance=pilot_info['alliance']
+###	pilot.faction=pilot_info['faction']
 	save_object(pilot,request)
 	return pilot	
 	
@@ -1068,18 +1070,19 @@ def add_pilot(request):
 		return render_to_response('evesolo/add_pilot.html',{'error':'Please supply a pilot name.','players':players},context_instance=RequestContext(request))
 	
 	#check the given API details are for the given pilot name, if so, add or create pilot, set key details and associate with player
-	####try:
-	key_id=int(request.POST['ID'])
-	key_vCode=request.POST['vCode']
-	cachedAPI=eveapi.EVEAPIConnection(cacheHandler=eveapi_cachehandler.CacheHandler(cache_dir='C:/web/www/evesolo_com/evesolo_site/eve_api_cache'))
-	api_conn=cachedAPI.auth(keyID=key_id,vCode=key_vCode)
-	api_char=api_conn.account.Characters().characters[0]
-	char_name=api_char.name
-	api_char_alliance=api_conn.eve.CharacterInfo(characterID=api_char.characterID,userID=key_id,apiKey=key_vCode).alliance
-
-		
-	####except:
-		####return render_to_response('evesolo/add_pilot.html',{'error':'There was a problem with the API details provided.','players':players},context_instance=RequestContext(request))
+	try:
+		key_id=int(request.POST['ID'])
+		key_vCode=request.POST['vCode']
+		cachedAPI=eveapi.EVEAPIConnection(cacheHandler=eveapi_cachehandler.CacheHandler(cache_dir='C:/web/www/evesolo_com/evesolo_site/eve_api_cache'))
+		api_conn=cachedAPI.auth(keyID=key_id,vCode=key_vCode)
+		api_char=api_conn.account.Characters().characters[0]
+		char_name=api_char.name
+		try:
+			api_char_alliance=api_conn.eve.CharacterInfo(characterID=api_char.characterID,userID=key_id,apiKey=key_vCode).alliance
+		except AttributeError:
+			api_char_alliance=''
+	except:
+		return render_to_response('evesolo/add_pilot.html',{'error':'There was a problem with the API details provided.','players':players},context_instance=RequestContext(request))
 	if char_name!=pilot_name:
 		return render_to_response('evesolo/add_pilot.html',{'error':'The API details provided are not for the pilot specified.','players':players},context_instance=RequestContext(request))
 	
@@ -1090,7 +1093,7 @@ def add_pilot(request):
 	if pilot.player:
 		if pilot.player.user:
 			if not pilot.player.user==request.user:
-				return render_to_response('evesolo/add_pilot.html',{'error':'Pilot is registered to another users player.','players':players},context_instance=RequestContext(request))
+				return render_to_response('evesolo/add_pilot.html',{'error':'Pilot is already associated to a player.','players':players},context_instance=RequestContext(request))
 		
 
 	pilot.api_key='[[%s]]%s' % (key_id,key_vCode)

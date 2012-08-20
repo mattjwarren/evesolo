@@ -104,9 +104,12 @@ def get_api_mail_block(request,pilot_id=None,killboard_url=None,latest_kill_id=N
 				
 				return render_to_response(error_page,{'error':exception.__str__()},context_instance=RequestContext(request))
 			raise exception
-			
-		api_char=api_conn.account.Characters().characters[0]	
-		kills_result=api_conn.char.Killlog(characterID=api_char.characterID).kills
+		
+		try:
+			api_char=api_conn.account.Characters().characters[0]	
+			kills_result=api_conn.char.Killlog(characterID=api_char.characterID).kills
+		except: #Pokemon
+			return render_to_response(error_page,{'error':'An unknown error occurred. Please try again later. If the problem persists, contact yellowalienbaby@gmail.com'},context_instance=RequestContext(request))
 		return kills_result
 		
 		

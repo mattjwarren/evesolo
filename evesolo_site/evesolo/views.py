@@ -1050,6 +1050,8 @@ def logout(request):
 def add_pilot(request):
 	profile_context=get_profile_context(request)
 	players_pilots=profile_context['players']
+	if players_pilots==None:
+		players_pilots=[]
 	players=[ p[0] for p in players_pilots ]
 	if len(players)==0:
 			return render_to_response('evesolo/profile.html',{'error':'You must add a player for your account before you can add a pilot to a player.'},context_instance=RequestContext(request))

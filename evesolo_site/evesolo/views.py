@@ -180,12 +180,11 @@ def calculate_kill_points(Lp,Wp):
 
 def update_or_create_pilot(request,pilot_info):
 	pilot=get_or_create_pilot(name=pilot_info['name'])
-	#/removed stop killmail pulls from overriding api pilot info
-	#((this can be done as we only accept api-pulled mails now, not hand posted))
-###	pilot.corp=pilot_info['corp']
-###	pilot.alliance=pilot_info['alliance']
-###	pilot.faction=pilot_info['faction']
-	save_object(pilot,request)
+	if not pilot.api_key:
+		pilot.corp=pilot_info['corp']
+		pilot.alliance=pilot_info['alliance']
+		pilot.faction=pilot_info['faction']
+		save_object(pilot,request)
 	return pilot	
 	
 def get_sql_rows(sql):

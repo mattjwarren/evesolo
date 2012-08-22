@@ -238,7 +238,7 @@ def search(request):
 		return render_to_response('evesolo/search.html',{'error':'The text to search for must contain at least 3 characters'},context_instance=RequestContext(request))
 	
 	
-	possible_pilots=Pilot.objects.filter(name__icontains=pilot_name)
+	possible_pilots=Pilot.objects.filter(name__icontains=pilot_name).order_by('name')
 	if len(possible_pilots)==0:
 		return render_to_response('evesolo/search.html',{'message':'Sorry, no pilots could be found'},context_instance=RequestContext(request))
 		
@@ -1836,9 +1836,9 @@ def pilot(request,pilot_id,board_id,verified=False):
 	
 	#last 10 fights
 	if not board_id:
-		last_10_fights=Solokill.objects.filter(Q(winning_pilot=pilot)|Q(losing_pilot=pilot),points_awarded__gt=0).order_by('-kill_date')[:10]
+		last_10_fights=Solokill.objects.filter(Q(winning_pilot=pilot)|Q(losing_pilot=pilot)).order_by('-kill_date')[:10] #points_awarded__gt=0
 	else:
-		last_10_fights_leaderboard_kills=Leaderboardkills.objects.filter(Q(solokill__winning_pilot=pilot)|Q(solokill__losing_pilot=pilot),leaderboard=leaderboard,solokill__points_awarded__gt=0).order_by('-solokill__kill_date')[:10]
+		last_10_fights_leaderboard_kills=Leaderboardkills.objects.filter(Q(solokill__winning_pilot=pilot)|Q(solokill__losing_pilot=pilot),leaderboard=leaderboard).order_by('-solokill__kill_date')[:10] #,solokill__points_awarded__gt=0
 		last_10_fights=[ ltflk.solokill for ltflk in last_10_fights_leaderboard_kills]
 	
 #	all_time_rank=[ r[0] for r in get_sql_rows(sql % ('20010101010101'))].index(pilot_id)+1

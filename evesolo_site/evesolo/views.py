@@ -501,14 +501,14 @@ def join_board(request):
 	
 	if not (in_alliance or in_corp or in_pilots):
 		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='%s has not been invited to %s' % (joining_pilot.name,board_to_join.name)
+		manage_boards_context['error']='Pilot has not been invited to board.'
 		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
 		
 	
 	existing_invites=Leaderboardinvites.objects.filter(leaderboard=board_to_join,pilot=joining_pilot,status='ACCEPTED')
 	if len(existing_invites)>0:
 		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='%s is already participating in %s' % (joining_pilot.name,board_to_join.name)
+		manage_boards_context['error']='Pilot is already competing in board.' % (joining_pilot.name,board_to_join.name)
 		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
 	
 	#Ok. Create invite for Pilot with status='ACCEPTED'
@@ -633,19 +633,28 @@ def edit_board(request,board_id):
 	if allowed_pilots:
 		allowed_pilots=''.join([ ap.name+',' for ap in allowed_pilots  if ap ])
 	if not allowed_pilots: allowed_pilots=''
-		
-	#allowed_ships=Leaderboardallowedships.objects.filter(leaderboard=leaderboard_to_edit)
-	#allowed_systems=Leaderboardallowedsystems.objects.filter(leaderboard=leaderboard_to_edit)
 	
+	#allowed shipclasses and ships
+	allowed_shipclasses=Leaderboardallowedships.objects.filter(leaderboard=leaderboard_to_edit,type='CLASS')
+	allowed_ships=Leaderboardallowedships.objects.filter(leaderboard=leaderboard_to_edit,type='SHIP')
 	
+	if allowed_shipclasses:
+		allowed_shipclasses=''.join([sc.name+',' for sc in allowed_shipclasses if sc])
+	if not allowed_shipclasses: allowed_shipclasses=''
+	if allowed_ships:
+		allowed_ships=''.join([sc.name+',' for sc in allowed_ships if sc])
+	if not allowed_ships: allowed_ships=''
 	
 	context=dict()
 	context.update(manage_boards_context)
 	context['players']=players
-	context={'leaderboard':leaderboard_to_edit}
+#	context={'leaderboard':leaderboard_to_edit}
+	context['leaderboard']=leaderboard_to_edit
 	context['allowed_alliances']=allowed_alliances
 	context['allowed_corps']=allowed_corps
 	context['allowed_pilots']=allowed_pilots
+	context['allowed_shipclasses']=allowed_shipclasses
+	context['allowed_ships']=allowed_ships
 	
 	#if request has no POST or any bad POST, redirect back to form
 	if (not request.method=='POST'):
@@ -756,6 +765,10 @@ def edit_board(request,board_id):
 	alliances=request.POST['allowed_alliances'].split(',')
 	corps=request.POST['allowed_corps'].split(',')
 	pilots=request.POST['allowed_pilots'].split(',')
+	shipclasses=request.POST['allowed_shipclasses'].split(',')
+	ships=request.POST['allowed_ships'].split(',')
+	Leaderboardallowedships.objects.filter(leaderboard=leaderboard_to_edit).delete()
+	#systems...
 	Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard_to_edit).delete()
 	for alliance in [ a for a in alliances if a ]:
 		lap=Leaderboardallowedparticipants()
@@ -775,7 +788,18 @@ def edit_board(request,board_id):
 		lap.type='PILOT'
 		lap.name=pilot.strip()
 		lap.save()
-	
+	for shipclass in [s for s in shipclasses if s]:
+		las=Leaderboardallowedships()
+		las.leaderboard=leaderboard_to_edit
+		las.type='CLASS'
+		las.name=shipclass.strip()
+		las.save()
+	for ship in [s for s in ships if s]:
+		las=Leaderboardallowedships()
+		las.leaderboard=leaderboard_to_edit
+		las.type='SHIP'
+		las.name=ship.strip()
+		las.save()	
 	
 	return HttpResponseRedirect(reverse('evesolo.views.manage_boards'))
 	
@@ -890,6 +914,8 @@ def add_leaderboard(request):
 	leaderboard.rank_style=leaderboard_rank_style.upper()
 	leaderboard.player=managing_player
 	leaderboard.description=leaderboard_description.strip()
+	
+	
 	##friendly/competitor kills
 	if friendly_kills_allowed:
 		leaderboard.allow_friendly_kills=1
@@ -906,10 +932,16 @@ def add_leaderboard(request):
 	
 	
 	#Now the allowed alliances/corps/pilots
+	#ship classes/ships
+	#/systems
+	
 	#first, clear current and then re-set
 	alliances=request.POST['allowed_alliances'].split(',')
 	corps=request.POST['allowed_corps'].split(',')
 	pilots=request.POST['allowed_pilots'].split(',')
+	shipclasses=request.POST['allowed_shipclasses'].split(',')
+	ships=request.POST['allowed_ships'].split(',')
+	Leaderboardallowedships.objects.filter(leaderboard=leaderboard).delete()
 	Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard).delete()
 	for alliance in [ a for a in alliances if a ]:
 		lap=Leaderboardallowedparticipants()
@@ -929,6 +961,19 @@ def add_leaderboard(request):
 		lap.type='PILOT'
 		lap.name=pilot.strip()
 		lap.save()
+	for shipclass in shipclasses:
+		las=Leaderboardallowedships()
+		las.leaderboard=leaderboard
+		las.type='CLASS'
+		las.name=shipclass.strip()
+		las.save()
+	for ship in ships:
+		las=Leaderboardallowedships()
+		las.leaderboard=leaderboard
+		las.type='SHIP'
+		las.name=ship.strip()
+		las.save()
+	
 
 	return HttpResponseRedirect(reverse('evesolo.views.manage_boards'))	
 
@@ -1906,7 +1951,6 @@ def manage_kills(request):
 		try:
 			filter_by_pilot_id=int(request.POST['filter_by_pilot'])
 		except ValueError:
-			
 			context['error']='Unknown pilot.'
 			return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
 		try:
@@ -1949,6 +1993,20 @@ def manage_kills(request):
 			context['error']='Board not found'
 			return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
 		
+		player_pilots=Pilot.objects.filter(player__user=request.user)
+
+		#get set of all ships allowed (all, or just classes and names given) in the board for checking kills
+		ships_allowed_in_board=[]
+		allowed_classes=Leaderboardallowedships.objects.filter(type='CLASS')
+		allowed_names=Leaderboardallowedships.objects.filter(type='SHIP')
+		for allowed_class in allowed_classes:
+			class_ships=Ship.objects.filter(hull_class__human_name=allowed_class.name)
+			ships_allowed_in_board+=[ cs.name for cs in class_ships ]
+		ships_allowed_in_board+=[ an.name for an in allowed_names ]
+
+
+		ship_restrictions=0
+		bad_pilots=0
 		added_count=0
 		not_invited=0
 		not_allowed_competitor=0
@@ -1968,15 +2026,27 @@ def manage_kills(request):
 				kills_not_verified+=1
 				continue
 			#if its too old bye bye
-			if solokill.kill_date<board_to_enter.start_date:
-				too_old+=1
-				continue
+##			if solokill.kill_date<board_to_enter.start_date:
+##				too_old+=1
+##				continue
+			#is the kill restricted by shiptype or shipclass
+			if ships_allowed_in_board:
+				if solokill.winners_ship.name not in ships_allowed_in_board:
+					ship_restrictions+=1
+					continue
+
 			pilot_to_add=solokill.winning_pilot
+			#check it belongs to the correct pilot .. a pilot the user owns
+			if pilot_to_add not in player_pilots:
+				bad_pilots+=1
+				continue
+			
 			
 			pilot_invite=Leaderboardinvites.objects.filter(leaderboard=board_to_enter,pilot=pilot_to_add,status="ACCEPTED").count()
 			if pilot_invite==0:
 				not_invited+=1
 				continue
+			
 			
 			#is kill leaderboard restricted by Friends / competitors?
 			friendly_allowed=board_to_enter.allow_friendly_kills
@@ -1996,7 +2066,7 @@ def manage_kills(request):
 				not_allowed_friendly+=1
 				continue
 			
-			
+			#does the kill already exist
 			try:
 				Leaderboardkills.objects.get(leaderboard=board_to_enter,solokill=solokill)
 				#
@@ -2005,27 +2075,41 @@ def manage_kills(request):
 				leaderboard_kill=Leaderboardkills(leaderboard=board_to_enter,solokill=solokill)
 				save_object(leaderboard_kill,request)
 				added_count+=1
-				
+			
+			
 		error_list=[]
-		not_allowed=not_allowed_competitor+not_allowed_friendly+already_entered+kills_not_verified+too_old+not_invited
+		not_allowed=not_allowed_competitor+not_allowed_friendly+already_entered+kills_not_verified+too_old+not_invited+ship_restrictions+bad_pilots
 		
+		context['mesaage']=[]
 		if not_allowed==0:
 			context['message']='All Kills succesfully entered.' % (added_count,len(solokills_to_add))
 		elif not_allowed>0:
 			if not_allowed_competitor:
-				error_list.append('%d Competitor kills not allowed.' % not_allowed_competitor)
+				error_list.append('%d Refused, competitor kills not allowed.' % not_allowed_competitor)
+			if ship_restrictions:
+				error_list.append('%d Refused, winning shiptype does not qualify for the leaderboard.' % ship_restrictions)
+			if bad_pilots:
+				error_list.append('%d Refused, bad pilot.' % bad_pilots)
+				
+				#
+				#
+				#
+				# Just added errors in for restricted ships, systems still to do (all)+ GUI side
+				#
+				#
+				
 			if not_allowed_friendly:
-				error_list.append('%d Friendly kills not allowed.' % not_allowed_friendly)
+				error_list.append('%d Refused, Friendly kills not allowed.' % not_allowed_friendly)
 			if not_invited>0:
-				error_list.append('%d Kills refused, pilot not competing in board.' % not_invited)
+				error_list.append('%d Refused, pilot not competing in board.' % not_invited)
 			if already_entered>0:
-				error_list.append('%d Kills refused, kills already entered into board.' % already_entered)
+				error_list.append('%d Refused, kills already entered into board.' % already_entered)
 			if kills_not_verified>0:
-				error_list.append('%d Kills refused, not verified.' % kills_not_verified)
+				error_list.append('%d Refused, not verified.' % kills_not_verified)
 			if too_old>0:
-				error_list.append('%d Kills refused, kills are too old.' % too_old)
+				error_list.append('%d Refused, kills are too old.' % too_old)
 			if added_count:
-				context['message'].append('...%d other Kills succesfully entered.') % added_count
+				context['message'].append('...%d Succesfully entered.') % added_count
 			context['error']='</br>'.join(error_list)
 		return render_to_response('evesolo/manage_kills.html',context,context_instance=RequestContext(request))
 

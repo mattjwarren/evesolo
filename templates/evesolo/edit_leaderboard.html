@@ -3,8 +3,8 @@
 <form action="/player/board_action/" method="post">
 {% csrf_token %}
 <h1>Edit Leaderboard</h1>
-<ul><li><button type="submit" name="Remove" value="{{leaderboard.id}}" class="default" />Delete!</button></li></ul><br><br>
     <table>
+	<tr><td><ul><li>Details:</li></ul></td><td></td></tr>
 	<tr>
 		<td><label for="id_leaderboard_player_name">Managing Player</label></td>
 		<td><select name="leaderboard_player_name" id="id_leaderboard_player_name">
@@ -18,7 +18,7 @@
 	</tr>
 	<tr>
 		<td><label for="id_leaderboard_name">Leaderboard Name:</label></td>
-		<td><input type="text" name="leaderboard_name" size="64" value="{{leaderboard.name}}" id="id_leaderboard_name" /></td>
+		<td><input type="text" name="leaderboard_name" value="{{leaderboard.name}}" id="id_leaderboard_name" /></td>
 		<td></td>
 	</tr>
 	<tr>
@@ -36,6 +36,14 @@
 		</td>
 		<td></td>
 	</tr>
+	<tr>
+		<td><label for="id_leaderboard_description">Description:</label></td>
+		<td><textarea rows="8" cols="47" name="leaderboard_description" id="id_leaderboard_description">{{leaderboard.description}}</textarea></td>
+		<td></td>
+	</tr>
+
+
+	<tr><td><br/><ul><li>Restrictions:</li></ul></td><td></td></tr>
 
 	<tr>
 		<td><label for="id_leaderboard_max_participants">Max Participants:</label></td>
@@ -60,6 +68,16 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td><label for="id_allowed_shipclasses">Allowed Ship Classes:</label></td>
+		<td><input type="text" name="allowed_shipclasses" size="64" value="{{allowed_shipclasses}}" id="id_allowed_shipclasses" /></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td><label for="id_allowed_ships">Allowed Ships:</label></td>
+		<td><input type="text" name="allowed_ships" size="64" value="{{allowed_ships}}" id="id_allowed_ships" /></td>
+		<td></td>
+	</tr>
+	<tr>
 		<td><label for="id_allow_friendly_kills">Allow Friendly Kills<br/>(kills against own corp or alliance):</label></td>
 		<td><input type="checkbox" name="allow_friendly_kills" {% if leaderboard.allow_friendly_kills %}checked{% else %} empty {% endif %} value="True" id="id_allow_friendly_kills" /></td>
 		<td></td>
@@ -70,14 +88,10 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td><label for="id_leaderboard_description">Description:</label></td>
-		<td><textarea rows="8" cols="64" name="leaderboard_description" id="id_leaderboard_description">{{leaderboard.description}}</textarea></td>
-		<td></td>
-	</tr>
-	<tr>
 		<td></td>
 		<td><button type="submit" name="Update" value="{{leaderboard.id}}" class="default">Update</button>
-		
+		&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+		<button type="submit" name="Remove" value="{{leaderboard.id}}" class="default" />Delete!</button>
 		</td>
 		<td>
 		</td>

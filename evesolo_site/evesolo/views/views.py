@@ -1848,6 +1848,40 @@ def pilot(request,pilot_id,board_id,verified=False):
 							   context_instance=RequestContext(request))
 
 
+def ship_boards(request):
+	ctr=0
+	nav_set=[] #[ ( ('text','link'),('textN','linkN'),... ),...x5 ]
+	texts_links=[]
+	for hull_id in range(3,19):
+		hullclass=Hullclass.objects.get(pk=hull_id)
+		class_name=hullclass.human_name
+		texts_links.append( (class_name,hullclass.id) )
+		ctr+=1
+		if ctr==5:
+			nav_set.append(texts_links)
+			texts_links=[]
+			ctr=0
+	
+	ctr=0
+	nav_set_ship=[]
+	all_ships=Ship.objects.all().order_by('name')
+	names_ids=[]
+	for ship in all_ships:
+		names_ids.append( (ship.name,ship.id))
+		ctr+=1
+		if ctr==5:
+			nav_set_ship.append(names_ids)
+			names_ids=[]
+			ctr=0
+			
+	context={}
+	context['nav_set']=nav_set
+	context['ship_set']=nav_set_ship
+	return render_to_response('evesolo/ship_boards.html',
+							context,
+							context_instance=RequestContext(request))
+	
+			
 def ship_stats(request):
 
 	#OVERALL

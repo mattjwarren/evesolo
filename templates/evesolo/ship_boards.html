@@ -1,0 +1,36 @@
+{% extends "evesolo/base.html" %}
+{% block content %}
+<h1>Ship Leaderboards</h1>
+</br>
+Hull Class:-</br>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+		{% for texts_links in nav_set %}
+		<tr id="{% cycle 'tr_light' 'tr_dark' %}">
+			{% for text,link in texts_links %}
+			<td class="leaderboard" width="20%"><a href="/leaderboards_class/{{link}}/">{{text}}</a></td>
+			{% endfor %}
+		</tr>
+		{% endfor %}
+		</table>
+	</div>
+</div>
+</br>
+Ship:-</br>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+		{% for texts_links in ship_set %}
+		<tr id="{% cycle 'tr_light' 'tr_dark' %}">
+			{% for text,link in texts_links %}
+			<td class="leaderboard" width="20%"><a href="/leaderboards_ship/{{link}}/">{{text}}</td>
+			{% endfor %}
+		</tr>
+		{% endfor %}
+		</table>
+	</div>
+</div>
+</br>
+
+{% endblock content %}

@@ -24,7 +24,7 @@ urlpatterns = patterns('',
 	url(r'^leaderboards_ship/(?P<ship_id>\d+)/verified/$','evesolo.views.ship_leaderboard',{'verified':True}),
 	url(r'^leaderboards/add/$','evesolo.views.add_leaderboard'),
 	url(r'^leaderboards_custom/(?P<leaderboard_id>\d+)/$','evesolo.views.leaderboards_summary_custom'),
-	
+	url(r'^leaderboards_shipclassindex/$','evesolo.views.ship_boards'),
 	
 	url(r'^player/board_action/','evesolo.views.board_action'),
 	

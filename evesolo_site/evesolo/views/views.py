@@ -1,10 +1,10 @@
 from django.http import HttpResponse,HttpResponseRedirect
 from django.shortcuts import render_to_response
-from models import Solokill, Pilot, Player, Ship, Hullclass, Leaderboard, Leaderboardallowedparticipants
-from models import Leaderboardallowedships,Leaderboardallowedsystems, Leaderboardinvites,Leaderboardkills
+#from models import Solokill, Pilot, Player, Ship, Hullclass, Leaderboard, Leaderboardallowedparticipants
+#from models import Leaderboardallowedships,Leaderboardallowedsystems, Leaderboardinvites,Leaderboardkills
 from django.conf import settings
-#from evesolo.models import Solokill, Pilot, Player, Ship, Hullclass, Leaderboard, Leaderboardallowedparticipants
-#from evesolo.models import Leaderboardallowedships,Leaderboardallowedsystems, Leaderboardinvites
+from evesolo_site.evesolo.models import Solokill, Pilot, Player, Ship, Hullclass, Leaderboard, Leaderboardallowedparticipants
+from evesolo_site.evesolo.models import Leaderboardallowedships,Leaderboardallowedsystems, Leaderboardinvites,Leaderboardkills
 
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
@@ -19,45 +19,15 @@ from django.test.client import Client
 from datetime import datetime, timedelta
 from pyparsing import ParseException
 import urllib
+
+
+#users / players+pilots / leaderboards / kills
 import km_parser
 from sql_strings import *
 import eveapi_cachehandler
 import eveapi
-
-
-from exceptions import Exception
-
-class PilotDoesNotExist(Exception):
-	pass
-
-class NoAPIKeyForPilot(Exception):
-	pass
-	
-class IDOrVcodeProblem(Exception):
-	pass
-	
-class APIKeyNotForPilot(Exception):
-	pass
-	
-#from django import forms
-#from django.widgets import Textarea
-	
-class EmptyObject(object):
-	pass
-
-def update_attributes_with_keys(something=None,values={}):
-	for attribute in values:
-		if hasattr(something,attribute):
-			old_value=getattr(something,attribute)
-			new_value=values[attribute]
-			##check for string representations of integers
-			if (type(old_value) is type(1)) and (type(new_value) is type('')):
-				try:
-					new_value=int(new_value)
-				except ValueError:
-					continue 
-			if old_value!=new_value:
-				setattr(something,attribute,new_value)
+from utility import *
+from sql_strings import *
 	
 def get_api_connection_for_pilot(pilot_id=None):
 		pilot_id=int(pilot_id)
@@ -2026,9 +1996,9 @@ def manage_kills(request):
 				kills_not_verified+=1
 				continue
 			#if its too old bye bye
-##			if solokill.kill_date<board_to_enter.start_date:
-##				too_old+=1
-##				continue
+			if solokill.kill_date<board_to_enter.start_date:
+				too_old+=1
+				continue
 			#is the kill restricted by shiptype or shipclass
 			if ships_allowed_in_board:
 				if solokill.winners_ship.name not in ships_allowed_in_board:
@@ -2055,10 +2025,13 @@ def manage_kills(request):
 			losing_pilot=solokill.losing_pilot
 			looser_alliance=losing_pilot.alliance
 			looser_corp=losing_pilot.corp
-			looser_friendly=(looser_alliance==pilot_to_add.alliance) or (looser_corp==pilot_to_add.corp)
+			if (not looser_alliance) and (not pilot_to_add.alliance):
+				looser_friendly= looser_corp==pilot_to_add.corp
+			else:
+				looser_friendly=(looser_alliance==pilot_to_add.alliance) or (looser_corp==pilot_to_add.corp)
 			looser_competitor=Leaderboardinvites.objects.filter(leaderboard=board_to_enter,pilot=losing_pilot).count()>0
 			
-			#if looser is a competitor, and competitors are not allowe, then refuse regardless sof friendly status
+			#if looser is a competitor, and competitors are not allowed, then refuse regardless sof friendly status
 			if (looser_competitor) and (not competitor_allowed):
 				not_allowed_competitor+=1
 				continue
@@ -2080,9 +2053,9 @@ def manage_kills(request):
 		error_list=[]
 		not_allowed=not_allowed_competitor+not_allowed_friendly+already_entered+kills_not_verified+too_old+not_invited+ship_restrictions+bad_pilots
 		
-		context['mesaage']=[]
+		context['message']=[]
 		if not_allowed==0:
-			context['message']='All Kills succesfully entered.' % (added_count,len(solokills_to_add))
+			context['message']='All kills succesfully entered.' % (added_count,len(solokills_to_add))
 		elif not_allowed>0:
 			if not_allowed_competitor:
 				error_list.append('%d Refused, competitor kills not allowed.' % not_allowed_competitor)
@@ -2099,7 +2072,7 @@ def manage_kills(request):
 				#
 				
 			if not_allowed_friendly:
-				error_list.append('%d Refused, Friendly kills not allowed.' % not_allowed_friendly)
+				error_list.append('%d Refused, friendly kills not allowed.' % not_allowed_friendly)
 			if not_invited>0:
 				error_list.append('%d Refused, pilot not competing in board.' % not_invited)
 			if already_entered>0:

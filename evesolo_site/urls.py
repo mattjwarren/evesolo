@@ -37,6 +37,8 @@ urlpatterns = patterns('',
 	url(r'^pilot/leave_board/$','evesolo.views.leave_board'),
 	
 	url(r'^search/$','evesolo.views.search'),
+	url(r'^board_search/$','evesolo.views.custom_board_search'),
+	
 	
 	url(r'^accounts/register/$','evesolo.views.register'),									
 	url(r'^accounts/login/$', 'django.contrib.auth.views.login',{'template_name': 'evesolo/login.html'}),

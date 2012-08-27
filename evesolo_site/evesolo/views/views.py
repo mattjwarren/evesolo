@@ -213,6 +213,24 @@ def search(request):
 		return render_to_response('evesolo/search.html',{'message':'Sorry, no pilots could be found'},context_instance=RequestContext(request))
 		
 	return render_to_response('evesolo/search.html',{'possible_pilots':possible_pilots},context_instance=RequestContext(request))
+
+def custom_board_search(request):
+	if not request.method=='POST' or ('leaderboard_text' not in request.POST):
+		return render_to_response('evesolo/board_search.html',context_instance=RequestContext(request))
+	
+	leaderboard_text=request.POST['leaderboard_text'].strip()
+	if len(leaderboard_text)==0:
+		return render_to_response('evesolo/board_search.html',{'error':'Please give some text to search for'},context_instance=RequestContext(request))
+	
+	if len(leaderboard_text)<3:
+		return render_to_response('evesolo/board_search.html',{'error':'The text to search for must contain at least 3 characters'},context_instance=RequestContext(request))
+	
+	
+	possible_leaderboards=Leaderboard.objects.filter(Q(name__icontains=leaderboard_text)|Q(description__icontains=leaderboard_text)).order_by('name')
+	if len(possible_leaderboards)==0:
+		return render_to_response('evesolo/board_search.html',{'message':'Sorry, no leaderboards could be found'},context_instance=RequestContext(request))
+		
+	return render_to_response('evesolo/board_search.html',{'possible_leaderboards':possible_leaderboards},context_instance=RequestContext(request))
 	
 def register(request):
 	if not request.method=='POST' or ( ('username' not in request.POST) or ('email' not in request.POST) or ('password' not in request.POST) or ('password_confirm' not in request.POST) ):
@@ -2097,14 +2115,7 @@ def manage_kills(request):
 				error_list.append('%d Refused, winning shiptype does not qualify for the leaderboard.' % ship_restrictions)
 			if bad_pilots:
 				error_list.append('%d Refused, bad pilot.' % bad_pilots)
-				
-				#
-				#
-				#
-				# Just added errors in for restricted ships, systems still to do (all)+ GUI side
-				#
-				#
-				
+
 			if not_allowed_friendly:
 				error_list.append('%d Refused, friendly kills not allowed.' % not_allowed_friendly)
 			if not_invited>0:

@@ -1,6 +1,6 @@
 .ddsmoothmenu{
-font: bold 12px Verdana;
-/*background: #414141; /*background of menu bar (default state)*/
+/*font: bold 12px Verdana;*/
+background: #222; /*background of menu bar (default state)*/
 width: 100%;
 }
 
@@ -21,11 +21,14 @@ float: left;
 /*Top level menu link items style*/
 .ddsmoothmenu ul li a{
 display: block;
-background: #414141; /*background of menu items (default state)*/
-color: white;
-padding: 8px 10px;
-border-right: 1px solid #778;
-color: #2d2b2b;
+background: #222; /*background of menu items (default state)*/
+color: #ccc;
+padding: 5px 10px;
+border-right: 1px solid #555;
+border-top: 1px solid #555;
+border-bottom: 1px solid #555;
+border-left: 1px solid #555;
+/*color: #2d2b2b;*/
 text-decoration: none;
 }
 
@@ -38,12 +41,12 @@ color: white;
 }
 
 .ddsmoothmenu ul li a.selected{ /*CSS class that's dynamically added to the currently active menu items' LI A element*/
-background: black; 
+background: #222; 
 color: white;
 }
 
 .ddsmoothmenu ul li a:hover{
-background: black; /*background of menu items during onmouseover (hover state)*/
+background: #222; /*background of menu items during onmouseover (hover state)*/
 color: white;
 }
 	
@@ -68,7 +71,7 @@ top: 0;
 
 /* Sub level menu links style */
 .ddsmoothmenu ul li ul li a{
-font: normal 13px Verdana;
+/*font: normal 13px Verdana;*/
 width: 160px; /*width of sub menus*/
 padding: 5px;
 margin: 0;

@@ -229,7 +229,13 @@ def custom_board_search(request):
 	possible_leaderboards=Leaderboard.objects.filter(Q(name__icontains=leaderboard_text)|Q(description__icontains=leaderboard_text)).order_by('name')
 	if len(possible_leaderboards)==0:
 		return render_to_response('evesolo/board_search.html',{'message':'Sorry, no leaderboards could be found'},context_instance=RequestContext(request))
-		
+	
+	for possible_board in possible_leaderboards:
+		number_participating=Leaderboardinvites.objects.filter(leaderboard=possible_board,status='ACCEPTED').count()
+		if number_participating==None:
+			number_participating=0
+		possible_board.participant_count=number_participating
+
 	return render_to_response('evesolo/board_search.html',{'possible_leaderboards':possible_leaderboards},context_instance=RequestContext(request))
 	
 def register(request):

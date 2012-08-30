@@ -1,0 +1,165 @@
+{% extends "evesolo/base.html" %}
+{% block content %}
+{% if leaderboard %}
+<h1>Board Info: {{leaderboard.name}}</h1>
+<ul>
+	<li><h2><a href="/leaderboards_custom/{{leaderboard.id}}/">View Leaderboard</a></h2></li>
+</ul>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+			<tr id="tr_dark">
+				<td class="leaderboard">{{leaderboard.description}}</td>
+			</tr>
+		</table>
+	</div>
+</div>
+
+<h2>Board Info</h2>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+			<tr id="tr_dark">
+				<td class="leaderboard">Allow Friendly Kills:</td>
+				<td class="leaderboard">{{allow_friendly_kills}}</td>
+			</tr>
+			<tr id="tr_dark">
+				<td class="leaderboard">Allow Competitor Kills:</td>
+				<td  class="leaderboard">{{allow_competitor_kills}}</td>
+			</tr>
+			<tr id="tr_dark">
+				<td class="leaderboard">Allowed Alliances</td>
+				<td  class="leaderboard"><ul>
+						{% for allowed in allowed_alliances %}
+						<li>{{allowed.name}}</li>
+						{% endfor %}
+					</ul>
+				</td>
+			</tr>
+			<tr id="tr_dark">
+				<td class="leaderboard">Allowed Corps</td>
+				<td  class="leaderboard"><ul>
+						{% for allowed in allowed_corps %}
+						<li>{{allowed.name}}</li>
+						{% endfor %}
+					</ul>
+				</td>
+			</tr>
+			<tr id="tr_dark">
+				<td class="leaderboard">Allowed Pilots</td>
+				<td  class="leaderboard"><ul>
+						{% for allowed in allowed_pilots %}
+						<li>{{allowed.name}}</li>
+						{% endfor %}
+					</ul>
+				</td>
+			</tr>
+			<tr id="tr_dark">
+				<td class="leaderboard">Allowed Hulls</td>
+				<td  class="leaderboard"><ul>
+						{% for allowed in allowed_shiptypes %}
+						<li>{{allowed.name}}</li>
+						{% endfor %}
+					</ul>
+				</td>
+			</tr>
+			<tr id="tr_dark">
+				<td class="leaderboard">Allowed Ships</td>
+				<td  class="leaderboard"><ul>
+						{% for allowed in allowed_ships %}
+						<li>allowed.name</li>
+						{% endfor %}
+					</ul>
+				</td>
+			</tr>
+			<tr id="tr_dark">
+				<td class="leaderboard">Pilots</td>
+				<td  class="leaderboard">Registered: {{registered_pilots_count}} / Active: {{active_pilots_count}} / Max: {{max_pilots}}
+				</td>
+			</tr>
+			<tr id="tr_dark">
+				<td class="leaderboard">Kills</td>
+				<td class="leaderboard" >Total: {{total_kills}} / Points: {{total_kill_points}} / Damage Done: {{total_damage_done}}
+				</td>
+			</tr>
+		</table>
+	</div>
+</div>
+<h2>Active Pilots</h2>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+			<tr class="boardheader">
+				<td>Name</td>
+				<td>Seen in # Fights</td>
+			</tr>
+			{% for pid,name,fights in most_active_pilots_rows %}
+			<tr id="{% cycle 'tr_light' 'tr_dark' %}">
+				<td><a href="/pilot/{{pid}}/">{{name}}</a></td>
+				<td>{{fights}}</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+</div>
+<h2>Most Wins by Ship</h2>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+			<tr class="boardheader">
+				<td class="leaderboard" width="33%">Ship</td>
+				<td class="leaderboard" width="33%">Name</td>
+				<td class="leaderboard" width="33%">Wins / Losses</td>
+			</tr>
+			{% for ccpid,name,shipid in most_winning_ships %}
+			<tr id="{% cycle 'tr_light' 'tr_dark' %}">
+				<td class="leaderboard" width="33%"><img src="http://image.eveonline.com/Render/{{ccpid}}_32.png"/></td>
+				<td class="leaderboard" width="33%"><a href="/leaderboards_ship/{{shipid}}/">{{name}}</a></td>
+				<td class="leaderboard" width="33%">{{shipid}}</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+</div>
+<h2>Most Losses by Ship</h2>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+			<tr class="boardheader">
+				<td class="leaderboard" width="33%">Ship</td>
+				<td class="leaderboard" width="33%">Name</td>
+				<td class="leaderboard" width="33%">Wins / Losses</td>
+			</tr>
+			{% for ccpid,name,shipid in least_winning_ships %}
+			<tr id="{% cycle 'tr_light' 'tr_dark' %}">
+				<td class="leaderboard" width="33%"><img src="http://image.eveonline.com/Render/{{ccpid}}_32.png"/></td>
+				<td class="leaderboard" width="33%"><a href="/leaderboards_ship/{{shipid}}/">{{name}}</a></td>
+				<td class="leaderboard" width="33%">{{shipid}}</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+</div>
+<h2>Most Seen Ships</h2>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+			<tr class="boardheader">
+				<td class="leaderboard" width="33%">Ship</td>
+				<td class="leaderboard" width="33%">Name</td>
+				<td class="leaderboard" width="33%">Seen in # fights</td>
+			</tr>
+			{% for ccpid,name,count,shipid in most_seen_ships %}
+			<tr id="{% cycle 'tr_light' 'tr_dark' %}">
+				<td class="leaderboard" width="33%"><img src="http://image.eveonline.com/Render/{{ccpid}}_32.png"/></td>
+				<td class="leaderboard" width="33%"><a href="/leaderboards_ship/{{shipid}}/">{{name}}</a></td>
+				<td class="leaderboard" width="33%">{{count}}</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+</div>
+{% endif %}
+
+
+{% endblock content %}

@@ -9,7 +9,7 @@ urlpatterns = patterns('',
 	
 	
 	url(r'^newmail/$','evesolo.views.newmail'),
-#	url(r'^postmail/$','evesolo.views.postmail'),
+#	url(r'^postmail/$','evesolo.views.postmail'), 
 	
 	
 	url(r'^kills/$','evesolo.views.latestkills'),
@@ -25,6 +25,7 @@ urlpatterns = patterns('',
 	url(r'^leaderboards/add/$','evesolo.views.add_leaderboard'),
 	url(r'^leaderboards_custom/(?P<leaderboard_id>\d+)/$','evesolo.views.leaderboards_summary_custom'),
 	url(r'^leaderboards_shipclassindex/$','evesolo.views.ship_boards'),
+	url(r'^leaderboard_stats/(?P<board_id>\d+)/','evesolo.views.custom_board_stats'),
 	
 	url(r'^player/board_action/','evesolo.views.board_action'),
 	

@@ -26,175 +26,14 @@ import km_parser
 from sql_strings import *
 import eveapi_cachehandler
 import eveapi
+
+
 from utility import *
 from sql_strings import *
-	
-def get_api_connection_for_pilot(pilot_id=None):
-		pilot_id=int(pilot_id)
-		try:
-			pilot=Pilot.objects.get(pk=pilot_id)
-		except Pilot.DoesNotExist:
-			raise PilotDoesNotExist('Pilot was not found.')
+from custom_leaderboards import *	
 
-		key_info=pilot.api_key
-		if not key_info:
-			raise NoAPIKeyForPilot('No API key found for pilot.')
 		
-		key_tokens=key_info.split(']]')
-		key_id=int(key_tokens[0][2:])
-		key_vCode=key_tokens[1]
-		pilot.vCode_id=key_id
-		pilot.vCode=key_vCode
-		
-		cachedAPI=eveapi.EVEAPIConnection(cacheHandler=eveapi_cachehandler.CacheHandler(cache_dir=settings.EVE_API_CACHE))
-		api_conn=cachedAPI.auth(keyID=key_id,vCode=key_vCode)
-		try:
-			api_char=api_conn.account.Characters().characters[0]
-		except:
-			raise IDOrVcodeProblem('There was a problem with the ID/vCode supplied, please try again.')
-		
-		api_char_name=api_char.name
-		if not api_char_name==pilot.name:
-			raise APIKeyNotForPilot('The API key given is not for this pilot.')
-		return (get_or_create_pilot(name=api_char_name),api_conn)
-		
-def get_api_mail_block(request,pilot_id=None,killboard_url=None,latest_kill_id=None,error_page=None,bailout_page=None):
-	api_conn_exceptions=[PilotDoesNotExist,NoAPIKeyForPilot,IDOrVcodeProblem,APIKeyNotForPilot]
-	
-	pull_method=pilot_id or killboard_url
-	
-	print pull_method
-	if type(pull_method) is int :
-		try:
-			pilot,api_conn=get_api_connection_for_pilot(pilot_id=pilot_id)
-		except Exception as exception:
-			if type(exception) in api_conn_exceptions:
-				if type(exception) is PilotDoesNotExist:
-					return HttpResponseRedirect(bailout_page)
-				
-				return render_to_response(error_page,{'error':exception.__str__()},context_instance=RequestContext(request))
-			raise exception
-		
-		try:
-			api_char=api_conn.account.Characters().characters[0]	
-			kills_result=api_conn.char.Killlog(characterID=api_char.characterID).kills
-		except: #Pokemon
-			return render_to_response(error_page,{'error':'An unknown error occurred. Please try again later. If the problem persists, contact yellowalienbaby@gmail.com'},context_instance=RequestContext(request))
-		return kills_result
-		
-		
-	if killboard_url:
-		print 'PULLIN FROM THA BOARD'
-		try:
-			if latest_kill_id: killboard_url+='&lastID=%d' % (latest_kill_id+1)
-			handle=urllib.urlopen(killboard_url)
-			kills_result=eveapi.ParseXML(handle).kills
-			handle.close()
-		except:
-			return render_to_response(error_page,
-										{'error':'There was a problem retrieving the kills from the killboard'},
-										context_instance=RequestContext(request))			
-		return kills_result
-		
-def get_km_losing_pilot_info(killmail=None):
-	losing_pilot_info={}
-	losing_pilot_info['name']=killmail.victim['Victim:']
-	losing_pilot_info['corp']=killmail.victim['Corp:']
-	losing_pilot_info['alliance']=killmail.victim['Alliance:']
-	losing_pilot_info['faction']=killmail.victim['Faction:']
-	losing_pilot_info['ship_ccpid']=killmail.victim['Destroyed:']
-	if type(losing_pilot_info['ship_ccpid']) is int:
-		try:
-			losing_pilot_info['ship']=Ship.objects.get(CCPID__ccp_type_id=losing_pilot_info['ship_ccpid'])
-		except Ship.DoesNotExist:
-			losing_pilot_info['ship']=None
-	else:
-		try:
-			losing_pilot_info['ship']=Ship.objects.get(name=losing_pilot_info['ship_ccpid'])
-		except Ship.DoesNotExist:
-			losing_pilot_info['ship']=None
-	return losing_pilot_info
 
-def get_km_winning_pilot_info(killmail=None):
-	winning_party=killmail.involved_parties[killmail.involved_parties.keys()[0]]
-	winning_pilot_info={}
-	winning_pilot_info['name']=winning_party['Name:']
-	winning_pilot_info['corp']=winning_party['Corp:']
-	winning_pilot_info['alliance']=winning_party['Alliance:']
-	winning_pilot_info['faction']=winning_party['Faction:']
-	winning_pilot_info['ship_ccpid']=winning_party['Ship:']
-	if type(winning_pilot_info['ship_ccpid']) is int:
-		try:
-			winning_pilot_info['ship']=Ship.objects.get(CCPID__ccp_type_id=winning_pilot_info['ship_ccpid'])
-		except Ship.DoesNotExist:
-			winning_pilot_info['ship']=None
-	else:
-		try:
-			winning_pilot_info['ship']=Ship.objects.get(name=winning_pilot_info['ship_ccpid'])
-		except Ship.DoesNotExist:
-			winning_pilot_info['ship']=None
-	
-	return winning_pilot_info
-
-def calculate_kill_points(Lp,Wp):
-	#Lp and Wp are ship hullclass fwp values for Loser and Winner
-	if Lp==0 and Wp==0:
-		kill_points=1
-	elif Lp==0:
-		kill_points=0
-	elif Wp==Lp:
-		kill_points=1
-	elif Wp<Lp:
-		kill_points=(Lp-Wp)+1
-	elif Wp>Lp:
-		kill_points=round(1.0/-((Lp-Wp)-1),2)
-	return kill_points
-
-def update_or_create_pilot(request,pilot_info):
-	pilot=get_or_create_pilot(name=pilot_info['name'])
-	if not pilot.api_key:
-		pilot.corp=pilot_info['corp']
-		pilot.alliance=pilot_info['alliance']
-		pilot.faction=pilot_info['faction']
-		save_object(pilot,request)
-	return pilot	
-	
-def get_sql_rows(sql):
-	#c=connection.cursor() 
-	c=getattr(connection,'cursor')() #//cursor only exists at runtime
-	c.execute(sql)
-	return c.fetchall()
-
-#def get_or_create_thing(what_kind_of_thing=None,its_name=None):
-#	try:
-#		the_thing=what_kind_of_thing.objects.get(name=its_name)
-#	except what_kind_of_thing.DoesNotExist:
-#		the_thing=what_kind_of_thing(name=its_name)
-#	return the_thing
-
-def get_or_create_leaderboard(name=None,manager=None):
-	try:
-		leaderboard=Leaderboard.objects.get(name=name,player=manager)
-	except Leaderboard.DoesNotExist:
-		leaderboard=Leaderboard(name=name,player=manager)
-	return leaderboard
-
-def get_or_create_pilot(name=None):
-	try:
-		pilot=Pilot.objects.get(name=name)
-	except Pilot.DoesNotExist:
-		pilot=Pilot(name=name)
-	return pilot
-
-def save_object(target,request):
-	try:
-		target.save()
-	except:
-		render_to_response('evesolo/error.html',context_instance=RequestContext(request))
-		
-def testemail(request):
-	send_mail('DJANGO TEST','Here is a message, indeed!','yellowalienbaby@gmail.com',['matthew_j_warren@hotmail.com'],fail_silently=False)
-	return HttpResponseRedirect(reverse('evesolo.views.latestkills'))
 	
 def search(request):
 	if not request.method=='POST' or ('pilot_name' not in request.POST):
@@ -214,29 +53,6 @@ def search(request):
 		
 	return render_to_response('evesolo/search.html',{'possible_pilots':possible_pilots},context_instance=RequestContext(request))
 
-def custom_board_search(request):
-	if not request.method=='POST' or ('leaderboard_text' not in request.POST):
-		return render_to_response('evesolo/board_search.html',context_instance=RequestContext(request))
-	
-	leaderboard_text=request.POST['leaderboard_text'].strip()
-	if len(leaderboard_text)==0:
-		return render_to_response('evesolo/board_search.html',{'error':'Please give some text to search for'},context_instance=RequestContext(request))
-	
-	if len(leaderboard_text)<3:
-		return render_to_response('evesolo/board_search.html',{'error':'The text to search for must contain at least 3 characters'},context_instance=RequestContext(request))
-	
-	
-	possible_leaderboards=Leaderboard.objects.filter(Q(name__icontains=leaderboard_text)|Q(description__icontains=leaderboard_text)).order_by('name')
-	if len(possible_leaderboards)==0:
-		return render_to_response('evesolo/board_search.html',{'message':'Sorry, no leaderboards could be found'},context_instance=RequestContext(request))
-	
-	for possible_board in possible_leaderboards:
-		number_participating=Leaderboardinvites.objects.filter(leaderboard=possible_board,status='ACCEPTED').count()
-		if number_participating==None:
-			number_participating=0
-		possible_board.participant_count=number_participating
-
-	return render_to_response('evesolo/board_search.html',{'possible_leaderboards':possible_leaderboards},context_instance=RequestContext(request))
 	
 def register(request):
 	if not request.method=='POST' or ( ('username' not in request.POST) or ('email' not in request.POST) or ('password' not in request.POST) or ('password_confirm' not in request.POST) ):
@@ -312,664 +128,6 @@ def get_profile_context(request):
 	context['players']=players
 	return context
 
-@login_required
-def get_managed_boards_context(request):
-	context={}
-	player_managed_leaderboards=[]
-	user_players=Player.objects.filter(user=request.user)
-	pilots_boards=[]
-	all_boards=[]
-	eligible_boards_by_pilot={}
-	
-	for player in user_players:
-		player_pilots=Pilot.objects.filter(player=player)
-		leaderboards=[]
-		#player pilots
-		for pilot in player_pilots:			
-			#grab the boards that the pilot has accepted invites for
-			accepted_invites=Leaderboardinvites.objects.filter(pilot=pilot,status='ACCEPTED')
-			participating_in_boards=[ inv.leaderboard for inv in accepted_invites ]
-			#monkey patch in the number of current participants
-			#(monkey patches can make templating smoother)
-			#TODO: change this to a property on the model?
-			for participating_in_board in participating_in_boards:
-				number_participating=Leaderboardinvites.objects.filter(leaderboard=participating_in_board,status='ACCEPTED').count()
-				if number_participating==None:
-					number_participating=0
-				participating_in_board.participant_count=number_participating
-			if len(participating_in_boards)!=0:
-				all_boards+=participating_in_boards
-				pilots_boards.append((pilot,participating_in_boards))
-			#find boards the pilot can join based on restrictions
-			alliance_participants=Leaderboardallowedparticipants.objects.filter(type='ALLIANCE',name=pilot.alliance)
-			corp_participants=Leaderboardallowedparticipants.objects.filter(type='CORP',name=pilot.corp)
-			pilot_participants=Leaderboardallowedparticipants.objects.filter(type='PILOT',name=pilot.name)
-			all_participants=list(alliance_participants)+list(corp_participants)+list(pilot_participants)
-			all_allowed_boards=[ p.leaderboard for p in all_participants if p.leaderboard not in participating_in_boards ]
-			if all_allowed_boards:
-				eligible_boards_by_pilot[pilot]=all_allowed_boards
-			#monkeypatching
-			#TODO: change this to a property on the model?
-			for participating_in_board in all_allowed_boards:
-				number_participating=Leaderboardinvites.objects.filter(leaderboard=participating_in_board,status='ACCEPTED').count()
-				if number_participating==None:
-					number_participating=0
-				participating_in_board.participant_count=number_participating
-					
-		#player managed leaderboards
-		player_leaderboards=Leaderboard.objects.filter(player=player)
-		for player_leaderboard in player_leaderboards:
-			number_participating=Leaderboardinvites.objects.filter(leaderboard=player_leaderboard,status='ACCEPTED').count()
-			if number_participating==None:
-				number_participating=0
-			player_leaderboard.participant_count=number_participating
-			leaderboards.append(player_leaderboard)
-		if len(leaderboards)!=0:
-			player_managed_leaderboards.append( (player,leaderboards) )
-
-	#Player eligible to join leaderboards
-	#by default, eligible for all boards that do not have any allowed participants/ships/systems
-	
-	#public boards (boards with no restrictions)
-	public_leaderboards=get_sql_rows(sql_public_leaderboards)
-	
-	
-	
-	#players
-	players=Player.objects.filter(user=request.user)
-	
-	#pilots
-	pilots=Pilot.objects.filter(player__user=request.user)
-	
-	if len(players)==0:
-		players=None
-	if len(pilots)==0:
-		pilots=None
-	if len(player_managed_leaderboards)==0:
-		player_managed_leaderboards=None
-	if len(public_leaderboards)==0:
-		public_leaderboards=None
-	if len(pilots_boards)==0:
-		pilots_boards=None
-	if not eligible_boards_by_pilot.keys():
-		eligible_boards_by_pilot=None
-	
-	
-	context['eligible_leaderboards']=public_leaderboards
-	context['eligible_boards_by_pilot']=eligible_boards_by_pilot
-	context['pilots_boards']=pilots_boards
-	context['player_managed_leaderboards']=player_managed_leaderboards
-	context['players']=players
-	context['pilots']=pilots
-	return context
-
-
-@login_required
-def manage_boards(request):
-	manage_boards_context=get_managed_boards_context(request)
-	return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-	
-
-@login_required
-def join_board(request):
-	#POST request and should ahve 'joining_pilot_name' and
-	#								'joining_board_id'
-	#otherwise, flip back to profile screen
-	if (not request.method=='POST'):
-		manage_boards_context=get_managed_boards_context(request)
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))		
-
-	joining_board_id=None
-	if not 'joining_board_id' in request.POST:
-		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='Board not found.'
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-	
-	joining_pilot_name=''
-	if 'joining_pilot_name' in request.POST:
-		joining_pilot_name=request.POST['joining_pilot_name'].strip()
-	elif ':' in request.POST['joining_board_id']:
-		joining_board_id,joining_pilot_name=request.POST['joining_board_id'].split(':')
-		joining_board_id.strip()
-		joining_pilot_name.strip()
-		
-	if len(joining_pilot_name)==0:
-		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='Please give a pilot name.'
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-
-	
-	try:
-		if not joining_board_id:
-			joining_board_id=int(request.POST['joining_board_id'])
-		else:
-			joining_board_id=int(joining_board_id)
-	except ValueError:
-		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='Board not found.'
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-
-	
-	#check pilot is registered to any user players,
-	#then the board exists, then make the LEaderboardinvites with status ACCEPTED
-	
-	#phase2 - Check pilot is in allowed participants
-	#and has been invited
-	try:
-		joining_pilot=Pilot.objects.get(name=joining_pilot_name)
-	except Pilot.DoesNotExist:
-		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='Unknown pilot trying to join a Leaderboard.'
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-
-	if joining_pilot.player:
-		if joining_pilot.player.user!=request.user:
-			manage_boards_context=get_managed_boards_context(request)
-			manage_boards_context['error']='You are not associated with that pilot.'
-			return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-	else:
-		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='Unknown pilot trying to join a Leaderboard.'
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-
-	try:
-		board_to_join=Leaderboard.objects.get(id=joining_board_id)
-	except Leaderboard.DoesNotExist:
-		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='Board not found.'
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-	
-	#check any restrictions if the board has them
-	
-	allowed_alliances=Leaderboardallowedparticipants.objects.filter(leaderboard=board_to_join,type='ALLIANCE')
-	allowed_alliances=[ aa.name for aa in allowed_alliances ]
-	in_alliance=joining_pilot.alliance in allowed_alliances
-	
-	allowed_corps=Leaderboardallowedparticipants.objects.filter(leaderboard=board_to_join,type='CORP')
-	allowed_corps=[ aa.name for aa in allowed_corps ]
-	in_corp=joining_pilot.corp in allowed_corps
-
-	allowed_pilots=Leaderboardallowedparticipants.objects.filter(leaderboard=board_to_join,type='PILOT')
-	allowed_pilots=[ aa.name for aa in allowed_pilots ]
-	in_pilots=joining_pilot.name in allowed_pilots
-	
-	if not (in_alliance or in_corp or in_pilots):
-		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='Pilot has not been invited to board.'
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-		
-	
-	existing_invites=Leaderboardinvites.objects.filter(leaderboard=board_to_join,pilot=joining_pilot,status='ACCEPTED')
-	if len(existing_invites)>0:
-		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='Pilot is already competing in board.' % (joining_pilot.name,board_to_join.name)
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-	
-	#Ok. Create invite for Pilot with status='ACCEPTED'
-	invite=Leaderboardinvites()
-	invite.leaderboard=board_to_join
-	invite.status='ACCEPTED'
-	invite.pilot=joining_pilot
-	
-	save_object(invite,request)
-	return HttpResponseRedirect(reverse('evesolo.views.manage_boards'))
-	
-@login_required
-def leave_board(request):
-	#POST request and should ahve 'resigning_board_id_pilot_id' in format '##:##'
-	#otherwise, flip back to profile screen
-	if (not request.method=='POST'):
-		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='No POST.'
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))		
-	
-	if not 'resigning_board_id_pilot_id' in request.POST:
-		manage_boards_context=get_managed_boards_context(request)
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-
-	try:
-		resigning_board_id,resigning_pilot_id=request.POST['resigning_board_id_pilot_id'].split(':')
-		resigning_board_id=int(resigning_board_id)
-		resigning_pilot_id=int(resigning_pilot_id)
-	except:
-		manage_boards_context=get_managed_boards_context(request)
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-
-	#check pilot is registered to any user players,
-	#then the board exists
-	
-	try:
-		resigning_pilot=Pilot.objects.get(id=resigning_pilot_id)
-	except Pilot.DoesNotExist:
-		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='Unknown pilot trying to resign from a Leaderboard.'
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-
-	if resigning_pilot.player:
-		if resigning_pilot.player.user!=request.user:
-			manage_boards_context=get_managed_boards_context(request)
-			manage_boards_context['error']='You are not associated with that pilot.'
-			return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-	else:
-		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='Unknown pilot trying to resign from a Leaderboard.'
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-
-	try:
-		board_to_resign=Leaderboard.objects.get(id=resigning_board_id)
-	except Leaderboard.DoesNotExist:
-		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='Board not found.'
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-	
-	#Ok. Remove ACCEPTED status invite for this board from pilot
-	#(Kills remain associated)
-	try:
-		invite=Leaderboardinvites.objects.get(leaderboard=board_to_resign,pilot=resigning_pilot,status='ACCEPTED')
-	except Leaderboardinvites.DoesNotExist:
-		manage_boards_context=get_managed_boards_context(request)
-		manage_boards_context['error']='Pilot is not participating in that leaderboard.'
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-
-	#Phase2 We currently do not remove the associated kills. This will be a configurable option.
-	
-	invite.delete()
-	return HttpResponseRedirect(reverse('evesolo.views.manage_boards'))
-			
-@login_required
-def board_action(request):
-	if request.method!='POST':
-		manage_boards_context=get_managed_boards_context(request)
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-	
-	#hmm, this did work!
-	if ('Remove' in request.POST) and (request.POST['Remove']):
-		return delete_board(request,request.POST['Remove'])
-	elif ('Edit' in request.POST) and (request.POST['Edit']):
-		board_id=request.POST['Edit']
-		request.POST=None
-		request.method='GET'
-		return edit_board(request,board_id)
-	elif ('Update' in request.POST) and (request.POST['Update']):
-		board_id=request.POST['Update']
-		return edit_board(request,board_id)
-	
-@login_required	
-def edit_board(request,board_id):
-	manage_boards_context=get_managed_boards_context(request)
-	players=Player.objects.filter(user=request.user)
-	
-	#check the board exists
-	try:
-		leaderboard_to_edit=Leaderboard.objects.get(id=board_id)
-	except Leaderboard.DoesNotExist:
-		manage_boards_context.update({'error':'Board not found.'})
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-		
-	#check board managed by player
-	board_owner=leaderboard_to_edit.player
-	if board_owner not in players:
-		manage_boards_context.update({'error':'You do not manage that board.'})
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-
-	#end of manage board redirects, setup context for edit_board redirects
-	#get corp.alliance.pilot lists
-	allowed_alliances=list(Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard_to_edit,type='ALLIANCE'))
-	allowed_corps=list(Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard_to_edit,type='CORP'))
-	allowed_pilots=list(Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard_to_edit,type='PILOT'))
-	
-	if allowed_alliances:
-		allowed_alliances=''.join([ ap.name+',' for ap in allowed_alliances if ap ])
-	if not allowed_alliances: allowed_alliances=''
-	if allowed_corps:
-		allowed_corps=''.join([ ap.name+',' for ap in allowed_corps  if ap ])
-	if not allowed_corps: allowed_corps=''
-	if allowed_pilots:
-		allowed_pilots=''.join([ ap.name+',' for ap in allowed_pilots  if ap ])
-	if not allowed_pilots: allowed_pilots=''
-	
-	#allowed shipclasses and ships
-	allowed_shipclasses=Leaderboardallowedships.objects.filter(leaderboard=leaderboard_to_edit,type='CLASS')
-	allowed_ships=Leaderboardallowedships.objects.filter(leaderboard=leaderboard_to_edit,type='SHIP')
-	
-	if allowed_shipclasses:
-		allowed_shipclasses=''.join([sc.name+',' for sc in allowed_shipclasses if sc])
-	if not allowed_shipclasses: allowed_shipclasses=''
-	if allowed_ships:
-		allowed_ships=''.join([sc.name+',' for sc in allowed_ships if sc])
-	if not allowed_ships: allowed_ships=''
-	
-	context=dict()
-	context.update(manage_boards_context)
-	context['players']=players
-#	context={'leaderboard':leaderboard_to_edit}
-	context['leaderboard']=leaderboard_to_edit
-	context['allowed_alliances']=allowed_alliances
-	context['allowed_corps']=allowed_corps
-	context['allowed_pilots']=allowed_pilots
-	context['allowed_shipclasses']=allowed_shipclasses
-	context['allowed_ships']=allowed_ships
-	
-	#if request has no POST or any bad POST, redirect back to form
-	if (not request.method=='POST'):
-		return render_to_response('evesolo/edit_leaderboard.html',context,context_instance=RequestContext(request))
-	
-	#validate & coerce fields
-	if 'leaderboard_player_name' in request.POST:
-		leaderboard_player_name=request.POST['leaderboard_player_name'].strip()
-	else:
-		leaderboard_player_name=leaderboard_to_edit.player.name
-		
-	if 'leaderboard_name' in request.POST:
-		leaderboard_name=request.POST['leaderboard_name'].strip()
-	else:
-		leaderboard_name=leaderboard_to_edit.name
-		
-	if 'leaderboard_ranks' in request.POST:
-		try:
-			leaderboard_ranks=int(request.POST['leaderboard_ranks'].strip())
-		except ValueError:
-			context['error']='Please give the number of ranks to show in the leaderboard.'
-			return render_to_response('evesolo/edit_leaderboard.html',context,context_instance=RequestContext(request))
-	else:
-		leaderboard_ranks=leaderboard_to_edit.ranks
-		
-	if 'leaderboard_rank_style' in request.POST:
-		leaderboard_rank_style=request.POST['leaderboard_rank_style'].upper()
-	else:
-		leaderboard_rank_style=leaderboard_to_edit.rank_style
-		
-	if 'leaderboard_max_participants' in request.POST:
-		try:
-			leaderboard_max_participants=int(request.POST['leaderboard_max_participants'].strip())
-		except ValueError:
-			context['error']='Please give the max number of participants in the leaderboard.'
-			return render_to_response('evesolo/edit_leaderboard.html',context,context_instance=RequestContext(request))
-	else:
-		leaderboard_max_participants=leaderboard_to_edit.max_participants
-		
-	if 'leaderboard_description' in request.POST:
-		leaderboard_description=request.POST['leaderboard_description'].strip()
-	else:
-		leaderboard_description=leaderboard_to_edit.description.strip()
-	
-	friendly_kills_allowed=False
-	if 'allow_friendly_kills' in request.POST:
-		friendly_kills_allowed=request.POST['allow_friendly_kills']=='True'
-	competitor_kills_allowed=False
-	if 'allow_competitor_kills' in request.POST:
-		competitor_kills_allowed=request.POST['allow_competitor_kills']=='True'
-		
-	
-	#Its a good one, lets make the changes
-	old_player=leaderboard_to_edit.player
-	try:
-		new_player=Player.objects.get(name=leaderboard_player_name)
-	except Player.DoesNotExist:
-		context['error']='Player does not exist.'
-		return render_to_response('evesolo/edit_leaderboard.html',context,context_instance=RequestContext(request))
-	#Check new player is owned by user
-	if not request.user==new_player.user:
-		context['error']='You do not own that player.'
-		return render_to_response('evesolo/edit_leaderboard.html',context,context_instance=RequestContext(request))
-	if old_player.name!=new_player.name:
-		leaderboard_to_edit.player=new_player
-	
-	
-	old_name=leaderboard_to_edit.name
-	new_name=leaderboard_name
-	if (old_name!=new_name) and (len(new_name)>0):
-		leaderboard_to_edit.name=new_name
-		
-	old_ranks=leaderboard_to_edit.ranks
-	new_ranks=leaderboard_ranks	
-	if old_ranks!=new_ranks:
-		leaderboard_to_edit.ranks=new_ranks
-		
-	old_rank_style=leaderboard_to_edit.rank_style
-	new_rank_style=leaderboard_rank_style
-	if (old_rank_style!=new_rank_style):
-		if new_rank_style.upper() in valid_ranking_methods:
-			leaderboard_to_edit.rank_style=new_rank_style.upper()
-	
-	old_max_participants=leaderboard_to_edit.max_participants
-	new_max_participants=leaderboard_max_participants
-	if old_max_participants!=new_max_participants:
-		leaderboard_to_edit.max_participants=new_max_participants
-		
-	old_description=leaderboard_to_edit.description.strip()
-	new_description=leaderboard_description
-	if (old_description!=new_description) and (len(new_description.strip())>3):
-		leaderboard_to_edit.description=new_description
-
-	##friendly/competitor kills
-	if friendly_kills_allowed:
-		leaderboard_to_edit.allow_friendly_kills=1
-	else:
-		leaderboard_to_edit.allow_friendly_kills=0
-	if competitor_kills_allowed:
-		leaderboard_to_edit.allow_leaderboard_kills=1
-	else:
-		leaderboard_to_edit.allow_leaderboard_kills=0	
-
-	save_object(leaderboard_to_edit,request)
-	
-	#Now the allowed alliances/corps/pilots
-	#first, clear current and then re-set
-	alliances=request.POST['allowed_alliances'].split(',')
-	corps=request.POST['allowed_corps'].split(',')
-	pilots=request.POST['allowed_pilots'].split(',')
-	shipclasses=request.POST['allowed_shipclasses'].split(',')
-	ships=request.POST['allowed_ships'].split(',')
-	Leaderboardallowedships.objects.filter(leaderboard=leaderboard_to_edit).delete()
-	#systems...
-	Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard_to_edit).delete()
-	for alliance in [ a for a in alliances if a ]:
-		lap=Leaderboardallowedparticipants()
-		lap.leaderboard=leaderboard_to_edit
-		lap.type='ALLIANCE'
-		lap.name=alliance.strip()
-		lap.save()
-	for corp in [ c for c in corps if c ]:
-		lap=Leaderboardallowedparticipants()
-		lap.leaderboard=leaderboard_to_edit
-		lap.type='CORP'
-		lap.name=corp.strip()
-		lap.save()
-	for pilot in [ p for p in pilots if p ]:
-		lap=Leaderboardallowedparticipants()
-		lap.leaderboard=leaderboard_to_edit
-		lap.type='PILOT'
-		lap.name=pilot.strip()
-		lap.save()
-	for shipclass in [s for s in shipclasses if s]:
-		las=Leaderboardallowedships()
-		las.leaderboard=leaderboard_to_edit
-		las.type='CLASS'
-		las.name=shipclass.strip()
-		las.save()
-	for ship in [s for s in ships if s]:
-		las=Leaderboardallowedships()
-		las.leaderboard=leaderboard_to_edit
-		las.type='SHIP'
-		las.name=ship.strip()
-		las.save()	
-	
-	return HttpResponseRedirect(reverse('evesolo.views.manage_boards'))
-	
-		
-	
-		
-@login_required
-def delete_board(request,board_id):
-	manage_boards_context=get_managed_boards_context(request)
-	players=Player.objects.filter(user=request.user)
-	
-	#check board exists
-	try:
-		leaderboard_to_delete=Leaderboard.objects.get(id=board_id)
-	except Leaderboard.DoesNotExist:
-		manage_boards_context.update({'error':'Board not found.'})
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-	
-	#check board managed by player
-	board_owner=leaderboard_to_delete.player
-	if board_owner not in players:
-		manage_boards_context.update({'error':'You do not manage that board.'})
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-	
-	#then delete it
-	leaderboard_to_delete.delete()
-	return HttpResponseRedirect(reverse('evesolo.views.manage_boards'))
-
-
-valid_ranking_methods=['POINTS','KILLS']
-@login_required
-def add_leaderboard(request):
-	manage_boards_context=get_managed_boards_context(request)
-	players=Player.objects.filter(user=request.user)
-	if len(players)==0:
-		manage_boards_context.update({'error':'You must add a player to your account before you can add a leaderboard to a player.'})
-		return render_to_response('evesolo/manage_boards.html',manage_boards_context,context_instance=RequestContext(request))
-
-	
-	
-	if not request.method=='POST' or ('leaderboard_name' not in request.POST):
-		return render_to_response('evesolo/add_leaderboard.html',manage_boards_context,context_instance=RequestContext(request))
-	
-	player_name=request.POST['leaderboard_player_name'].strip()
-	if len(player_name)==0:
-		manage_boards_context['error']='Please give a player name.'
-		return render_to_response('evesolo/add_leaderboard.html',manage_boards_context,context_instance=RequestContext(request))
-	try:
-		managing_player=Player.objects.get(name=player_name,user=request.user)
-	except Player.DoesNotExist:
-		manage_boards_context['error']='That player is not associated with your username.'
-		return render_to_response('evesolo/add_leaderboard.html',manage_boards_context,context_instance=RequestContext(request))
-	
-	leaderboard_name=request.POST['leaderboard_name'].strip()
-	if len(leaderboard_name)==0:
-		manage_boards_context['error']='Please give a name for the leaderboard.'
-		return render_to_response('evesolo/add_leaderboard.html',manage_boards_context,context_instance=RequestContext(request))
-	
-	leaderboard_ranks=request.POST['leaderboard_ranks'].strip()
-	not_a_number=False
-	try:
-		leaderboard_ranks_int=int(leaderboard_ranks)
-	except:
-		not_a_number=True
-	if (len(leaderboard_ranks)==0) or (not_a_number):
-		manage_boards_context['error']='Please give the number of ranks to show on the leaderboard'
-		return render_to_response('evesolo/add_leaderboard.html',manage_boards_context,context_instance=RequestContext(request))
-	
-	leaderboard_rank_style=request.POST['leaderboard_style']
-	if (len(leaderboard_rank_style)==0) or (leaderboard_rank_style.upper() not in valid_ranking_methods):
-		manage_boards_context['error']='Please select a ranking method.'
-		return render_to_response('evesolo/add_leaderboard.html',manage_boards_context,context_instance=RequestContext(request))
-	
-	leaderboard_max_participants=request.POST['leaderboard_max_participants'].strip()
-	not_a_number=False
-	try:
-		leaderboard_max_participants_int=int(leaderboard_max_participants)
-	except:
-		not_a_number=True
-	if (len(leaderboard_max_participants)==0) or (not_a_number):
-		manage_boards_context['error']='Please give the maximum number of participants in the leaderboard.'
-		return render_to_response('evesolo/add_leaderboard.html',manage_boards_context,context_instance=RequestContext(request))
-
-	leaderboard_description=request.POST['leaderboard_description'].strip()
-	if len(leaderboard_description)<3:
-		manage_boards_context['error']='Please enter a description (at least 3 characters) for the leaderboard.'
-		return render_to_response('evesolo/add_leaderboard.html',manage_boards_context,context_instance=RequestContext(request))
-
-	friendly_kills_allowed=False
-	if 'allow_friendly_kills' in request.POST:
-		friendly_kills_allowed=request.POST['allow_friendly_kills']=='True'
-	competitor_kills_allowed=False
-	if 'allow_competitor_kills' in request.POST:
-		competitor_kills_allowed=request.POST['allow_competitor_kills']=='True'	
-	
-	
-	#Check the leaderboard is not asociated with another player
-	leaderboard=get_or_create_leaderboard(name=leaderboard_name,manager=managing_player)
-	#if any of the fields are set, then this leaderbaord already existed
-	if leaderboard.description!='':#cheap way to check if was got or created
-		manage_boards_context['error']='You already manage a board with that name, please choose another'
-		return render_to_response('evesolo/add_leaderboard.html',manage_boards_context,context_instance=RequestContext(request))
-	save_object(leaderboard,request)
-	if leaderboard.player:
-		if leaderboard.player.user:
-			if not leaderboard.player.user==request.user:
-				manage_boards_context['error']='The leaderboard name is already in use, please choose another'
-				return render_to_response('evesolo/add_leaderboard.html',manage_boards_context,context_instance=RequestContext(request))		
-	leaderboard.name=leaderboard_name
-	leaderboard.ranks=leaderboard_ranks_int
-	leaderboard.max_participants=leaderboard_max_participants_int
-	leaderboard.rank_style=leaderboard_rank_style.upper()
-	leaderboard.player=managing_player
-	leaderboard.description=leaderboard_description.strip()
-	
-	
-	##friendly/competitor kills
-	if friendly_kills_allowed:
-		leaderboard.allow_friendly_kills=1
-	else:
-		leaderboard.allow_friendly_kills=0
-	if competitor_kills_allowed:
-		leaderboard.allow_leaderboard_kills=1
-	else:
-		leaderboard.allow_leaderboard_kills=0
-		
-		
-	save_object(leaderboard,request)
-	
-	
-	
-	#Now the allowed alliances/corps/pilots
-	#ship classes/ships
-	#/systems
-	
-	#first, clear current and then re-set
-	alliances=request.POST['allowed_alliances'].split(',')
-	corps=request.POST['allowed_corps'].split(',')
-	pilots=request.POST['allowed_pilots'].split(',')
-	shipclasses=request.POST['allowed_shipclasses'].split(',')
-	ships=request.POST['allowed_ships'].split(',')
-	Leaderboardallowedships.objects.filter(leaderboard=leaderboard).delete()
-	Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard).delete()
-	for alliance in [ a for a in alliances if a ]:
-		lap=Leaderboardallowedparticipants()
-		lap.leaderboard=leaderboard
-		lap.type='ALLIANCE'
-		lap.name=alliance.strip()
-		lap.save()
-	for corp in [ c for c in corps if c ]:
-		lap=Leaderboardallowedparticipants()
-		lap.leaderboard=leaderboard
-		lap.type='CORP'
-		lap.name=corp.strip()
-		lap.save()
-	for pilot in [ p for p in pilots if p ]:
-		lap=Leaderboardallowedparticipants()
-		lap.leaderboard=leaderboard
-		lap.type='PILOT'
-		lap.name=pilot.strip()
-		lap.save()
-	for shipclass in shipclasses:
-		las=Leaderboardallowedships()
-		las.leaderboard=leaderboard
-		las.type='CLASS'
-		las.name=shipclass.strip()
-		las.save()
-	for ship in ships:
-		las=Leaderboardallowedships()
-		las.leaderboard=leaderboard
-		las.type='SHIP'
-		las.name=ship.strip()
-		las.save()
-	
-
-	return HttpResponseRedirect(reverse('evesolo.views.manage_boards'))	
 
 	
 @login_required
@@ -1344,6 +502,17 @@ def pull_mails(request):
 																'already_posted_verified_mails':already_posted_verified_mails,
 																'disputed_mails':disputed_mails},context_instance=RequestContext(request))
 
+
+#secrit point-recalc hook!
+@login_required
+def recalculate_killpoints(request):
+	for kill in Solokill.objects.all():
+		Lp=kill.losers_ship.hull_class.fwp_value
+		Wp=kill.winners_ship.hull_class.fwp_value
+		kill_points=calculate_kill_points(Lp,Wp)
+		kill.save()
+	return render_to_response('evesolo/profile.html',{'message':'Global killpoint recalculation has completed'},context_instance=RequestContext(request))
+
 @login_required
 def profile(request):
 	#get player associated with user if any, and pilots associated with player if any
@@ -1381,50 +550,6 @@ def leaderboards_summary(request,verified=False):
 	context['unverified_link']='<ul><li><a href="/leaderboards_summary/">Switch to all kills</a></li></ul>'
 	return render_to_response('evesolo/leaderboard.html',context,context_instance=RequestContext(request))
 
-def leaderboards_summary_custom(request,leaderboard_id):
-	context={}
-	try:
-		leaderboard_id=int(leaderboard_id)
-	except ValueError:
-		context['error']='Unknown leaderboard.'
-		return render_to_response('evesolo/leaderboard.html',context,context_instance=RequestContext(request))
-	
-	try:
-		leaderboard=Leaderboard.objects.get(id=leaderboard_id)
-	except Leaderboard.DoesNotExist:
-		context['error']='Unknown leaderboard.'
-		return render_to_response('evesolo/leaderboard.html',context,context_instance=RequestContext(request))
-
-	#Run the leaderbaords summary, but restrict to kills registered to the given leaderboard
-	#determine what rank style and use appropriate sql
-	now=datetime.now()
-	interval_week=datetime.strftime(now-timedelta(days=7),'%Y%m%d%H%M%S')
-	interval_month=datetime.strftime(now-timedelta(days=31),'%Y%m%d%H%M%S')
-	interval_quarter=datetime.strftime(now-timedelta(days=91),'%Y%m%d%H%M%S')
-	interval_half=datetime.strftime(now-timedelta(days=182),'%Y%m%d%H%M%S')
-	interval_year=datetime.strftime(now-timedelta(days=365),'%Y%m%d%H%M%S')
-	context={}
-	
-	if leaderboard.rank_style=='POINTS':
-		sql=sql_all_class_ranking_custom_points
-	else:
-		sql=sql_all_class_ranking_custom_kills
-	
-	ranks=leaderboard.ranks
-	
-	rank_sets=[]
-	rank_sets.append( ('All Time',get_sql_rows(sql % (leaderboard_id,'20010101010101',ranks))) )
-	rank_sets.append( ('Past Week',get_sql_rows(sql % (leaderboard_id,interval_week,ranks))))
-	rank_sets.append( ('Past Month',get_sql_rows(sql % (leaderboard_id,interval_month,ranks))))
-	rank_sets.append( ('Past Quarter',get_sql_rows(sql % (leaderboard_id,interval_quarter,ranks))))
-	rank_sets.append( ('Past Half Year',get_sql_rows(sql % (leaderboard_id,interval_half,ranks))))
-	rank_sets.append( ('Past Year',get_sql_rows(sql % (leaderboard_id,interval_year,ranks))))
-	
-	context['rank_sets']=rank_sets
-	context['header_title']='Leaderboard rankings: %s' % leaderboard.name
-	context['html_title']=None
-	context['include_verify']=False
-	return render_to_response('evesolo/leaderboard.html',context,context_instance=RequestContext(request))
 
 def ship_leaderboard(request,ship_id,verified=False):
 	now=datetime.now()
@@ -1501,84 +626,84 @@ def newmail(request):
 	return render_to_response('evesolo/newmail.html',context_instance=RequestContext(request))
 
 #NOT USED
-def postmail(request):
-	if request.method=='POST':
-		KM=km_parser.EveKillmail()
-		try:
-			KM.parse_killmail_from_copypaste(request.POST['killtext'])
-		except ParseException:
-			return render_to_response('evesolo/newmail.html',
-									  {'error':'We had trouble interpreting that killmail, please check it and try again.'},
-									  context_instance=RequestContext(request))		
-		#ensure is a valid solo mail, if so then create the Solokill object
-		if KM.is_solo_mail():
-			losing_pilot_info=get_km_losing_pilot_info(killmail=KM)
-			winning_pilot_info=get_km_winning_pilot_info(killmail=KM)
-			if (not losing_pilot_info['ship']) or (not winning_pilot_info['ship']):
-				return render_to_response('evesolo/newmail.html',
-						  {'error':'One of the ships on the killmail was of an unknown type.'},
-						  context_instance=RequestContext(request))
-			try:
-				kill_date_time=datetime.strptime(KM.kill_date,'%Y.%m.%d %H:%M:%S')
-			except ValueError:
-				kill_date_time=datetime.strptime(KM.kill_date,'%Y.%m.%d %H:%M')
-			submit_date_time=datetime.now()
-			
-			kill_damage=int(KM.victim['Damage Taken:'])
-			
-			
-			#do either of the pilots exist?
-			#if not, create blank pilot, else get the Pilot record
-			#update and save
-			losing_pilot=update_or_create_pilot(request,losing_pilot_info)
-			winning_pilot=update_or_create_pilot(request,winning_pilot_info)
-
-			#extract the KM lines we are after
-			relevant_km_lines=[]
-			for line in KM.kill_text.split('\n'):
-				if line.startswith('Destroyed items:') or line.startswith('Dropped items:'):
-					break
-				if len(line)!=0:
-					relevant_km_lines.append(line)
-			relevant_km_lines='\n'.join(relevant_km_lines)
-
-			#create the solokill if it does not exist
-			existing_sk=Solokill.objects.filter(losing_pilot=losing_pilot,
-											 winning_pilot=winning_pilot,
-											 kill_date=kill_date_time)
-			if len(existing_sk)!=0:
-				#Killmail already posted
-				return render_to_response('evesolo/newmail.html',
-										  {'kill_id':existing_sk[0].id,
-										  'message':'That kill has already been posted, view it <a href="/kills/%d/">here</a>' % existing_sk[0].id},
-										  context_instance=RequestContext(request))
-			
-			
-			#get the kill_points
-			Lp=losing_pilot_info['ship'].hull_class.fwp_value
-			Wp=winning_pilot_info['ship'].hull_class.fwp_value
-			kill_points=calculate_kill_points(Lp,Wp)
-			
-			#save the kill
-			solokill=Solokill(losing_pilot=losing_pilot,
-									winning_pilot=winning_pilot,
-									losers_ship=losing_pilot_info['ship'],
-									winners_ship=winning_pilot_info['ship'],
-									points_awarded=kill_points,
-									damage=kill_damage,
-									submit_date=submit_date_time,
-									kill_date=kill_date_time,
-									verified=False,
-									kill_text=relevant_km_lines)
-			save_object(solokill,request)
-			
-			return HttpResponseRedirect(reverse('evesolo.views.viewkill',args=(solokill.id,)))
-		else:
-			#Not a Solo kill!
-			return render_to_response('evesolo/newmail.html',
-									  {'error':'The EveSolo killboards only accept solo combat killmails.'},
-									  context_instance=RequestContext(request))
-	return HttpResponseRedirect(reverse('evesolo.views.newmail'))
+####def postmail(request):
+####	if request.method=='POST':
+####		KM=km_parser.EveKillmail()
+####		try:
+####			KM.parse_killmail_from_copypaste(request.POST['killtext'])
+####		except ParseException:
+####			return render_to_response('evesolo/newmail.html',
+####									  {'error':'We had trouble interpreting that killmail, please check it and try again.'},
+####									  context_instance=RequestContext(request))		
+####		#ensure is a valid solo mail, if so then create the Solokill object
+####		if KM.is_solo_mail():
+####			losing_pilot_info=get_km_losing_pilot_info(killmail=KM)
+####			winning_pilot_info=get_km_winning_pilot_info(killmail=KM)
+####			if (not losing_pilot_info['ship']) or (not winning_pilot_info['ship']):
+####				return render_to_response('evesolo/newmail.html',
+####						  {'error':'One of the ships on the killmail was of an unknown type.'},
+####						  context_instance=RequestContext(request))
+####			try:
+####				kill_date_time=datetime.strptime(KM.kill_date,'%Y.%m.%d %H:%M:%S')
+####			except ValueError:
+####				kill_date_time=datetime.strptime(KM.kill_date,'%Y.%m.%d %H:%M')
+####			submit_date_time=datetime.now()
+####			
+####			kill_damage=int(KM.victim['Damage Taken:'])
+####			
+####			
+####			#do either of the pilots exist?
+####			#if not, create blank pilot, else get the Pilot record
+####			#update and save
+####			losing_pilot=update_or_create_pilot(request,losing_pilot_info)
+####			winning_pilot=update_or_create_pilot(request,winning_pilot_info)
+####
+####			#extract the KM lines we are after
+####			relevant_km_lines=[]
+####			for line in KM.kill_text.split('\n'):
+####				if line.startswith('Destroyed items:') or line.startswith('Dropped items:'):
+####					break
+####				if len(line)!=0:
+####					relevant_km_lines.append(line)
+####			relevant_km_lines='\n'.join(relevant_km_lines)
+####
+####			#create the solokill if it does not exist
+####			existing_sk=Solokill.objects.filter(losing_pilot=losing_pilot,
+####											 winning_pilot=winning_pilot,
+####											 kill_date=kill_date_time)
+####			if len(existing_sk)!=0:
+####				#Killmail already posted
+####				return render_to_response('evesolo/newmail.html',
+####										  {'kill_id':existing_sk[0].id,
+####										  'message':'That kill has already been posted, view it <a href="/kills/%d/">here</a>' % existing_sk[0].id},
+####										  context_instance=RequestContext(request))
+####			
+####			
+####			#get the kill_points
+####			Lp=losing_pilot_info['ship'].hull_class.fwp_value
+####			Wp=winning_pilot_info['ship'].hull_class.fwp_value
+####			kill_points=calculate_kill_points(Lp,Wp)
+####			
+####			#save the kill
+####			solokill=Solokill(losing_pilot=losing_pilot,
+####									winning_pilot=winning_pilot,
+####									losers_ship=losing_pilot_info['ship'],
+####									winners_ship=winning_pilot_info['ship'],
+####									points_awarded=kill_points,
+####									damage=kill_damage,
+####									submit_date=submit_date_time,
+####									kill_date=kill_date_time,
+####									verified=False,
+####									kill_text=relevant_km_lines)
+####			save_object(solokill,request)
+####			
+####			return HttpResponseRedirect(reverse('evesolo.views.viewkill',args=(solokill.id,)))
+####		else:
+####			#Not a Solo kill!
+####			return render_to_response('evesolo/newmail.html',
+####									  {'error':'The EveSolo killboards only accept solo combat killmails.'},
+####									  context_instance=RequestContext(request))
+####	return HttpResponseRedirect(reverse('evesolo.views.newmail'))
 
 def latestkills(request,error=None):
 	total_pilots=Pilot.objects.count()
@@ -2065,6 +1190,7 @@ def manage_kills(request):
 
 			pilot_to_add=solokill.winning_pilot
 			#check it belongs to the correct pilot .. a pilot the user owns
+			#TODO: NOT a good check - need to tie to specific pilot ((last filtered by pilot..)
 			if pilot_to_add not in player_pilots:
 				bad_pilots+=1
 				continue

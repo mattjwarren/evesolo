@@ -310,6 +310,58 @@ sql_ships_most_losses_by_class='''select evesolo_ccpid.ccp_id,evesolo_ship.name,
 	order by c desc
 	limit 5'''
 	
+
+
+
+#NOTE - Includes _ALL_ ships even those with only 1 kill (Unlike the generic eve-board query)
+####sql_leaderboard_ships_best_wl_ratio='''select  evesolo_ccpid.ccp_id,evesolo_ship.name as shipname,evesolo_ship.id,
+####        (select if(count(*)>0,count(*),null)
+####        from evesolo_ship
+####        inner join evesolo_solokill on evesolo_solokill.winners_ship_id=evesolo_ship.id
+####        inner join evesolo_leaderboardkills on evesolo_leaderboardkills.solokill_id=evesolo_solokill.id
+####        where evesolo_solokill.points_awarded>0.0
+####        and evesolo_leaderboardkills.leaderboard_id=%d
+####        and evesolo_ship.name=shipname
+####        ) 
+####    /   
+####        (select if(count(*)>0,count(*),null)
+####        from evesolo_ship
+####        inner join evesolo_solokill on evesolo_solokill.losers_ship_id=evesolo_ship.id
+####		inner join evesolo_leaderboardkills on evesolo_leaderboardkills.solokill_id=evesolo_solokill.id
+####        where evesolo_solokill.points_awarded>0.0
+####		and evesolo_leaderboardkills.leaderboard_id=%d
+####        and evesolo_ship.name=shipname
+####        ) wl_ratio
+####  from evesolo_ship
+####  inner join evesolo_ccpid on evesolo_ccpid.id=evesolo_ship.CCPID_id  
+####	group by evesolo_ship.name
+####  having wl_ratio>0
+####	order by wl_ratio desc
+####	limit 5'''
+####sql_leaderboard_ships_worst_wl_ratio='''select  evesolo_ccpid.ccp_id,evesolo_ship.name as shipname,evesolo_ship.id,
+####        (select if(count(*)>0,count(*),null)
+####        from evesolo_ship
+####        inner join evesolo_solokill on evesolo_solokill.winners_ship_id=evesolo_ship.id
+####        inner join evesolo_leaderboardkills on evesolo_leaderboardkills.solokill_id=evesolo_solokill.id
+####        where evesolo_solokill.points_awarded>0.0
+####        and evesolo_leaderboardkills.leaderboard_id=%d
+####        and evesolo_ship.name=shipname
+####        ) 
+####    /   
+####        (select if(count(*)>0,count(*),null)
+####        from evesolo_ship
+####        inner join evesolo_solokill on evesolo_solokill.losers_ship_id=evesolo_ship.id
+####		inner join evesolo_leaderboardkills on evesolo_leaderboardkills.solokill_id=evesolo_solokill.id
+####        where evesolo_solokill.points_awarded>0.0
+####		and evesolo_leaderboardkills.leaderboard_id=%d
+####        and evesolo_ship.name=shipname
+####        ) wl_ratio
+####  from evesolo_ship
+####  inner join evesolo_ccpid on evesolo_ccpid.id=evesolo_ship.CCPID_id  
+####	group by evesolo_ship.name
+####  having wl_ratio>0
+####	order by wl_ratio asc
+####	limit 5'''
 sql_ships_best_wl_ratio='''select  evesolo_ccpid.ccp_id,evesolo_ship.name as shipname,evesolo_ship.id,
         (select if(count(*)>10,count(*),null)
         from evesolo_ship
@@ -330,7 +382,6 @@ sql_ships_best_wl_ratio='''select  evesolo_ccpid.ccp_id,evesolo_ship.name as shi
   having wl_ratio>0
 	order by wl_ratio desc
 	limit 5'''
-
 sql_ships_best_wl_ratio_by_class='''select  evesolo_ccpid.ccp_id,evesolo_ship.name as shipname,evesolo_ship.id,
         (select if(count(*)>10,count(*),null)
         from evesolo_ship
@@ -411,5 +462,56 @@ sql_public_leaderboards='''select evesolo_leaderboard.id as leaderboardid, eveso
 		'''
 		
 
+sql_pilot_leaderboard_fight_counts=''' select evesolo_pilot.id, evesolo_pilot.name, count(*) as c from evesolo_pilot
+inner join evesolo_solokill on (
+										 (evesolo_solokill.winning_pilot_id=evesolo_pilot.id
+                                     	 )
+                                     		or
+                                     	 (evesolo_solokill.losing_pilot_id=evesolo_pilot.id
+                                     	 )
+                                )
+inner join evesolo_leaderboardkills on evesolo_leaderboardkills.solokill_id=evesolo_solokill.id
+inner join evesolo_leaderboardinvites on evesolo_pilot.id=evesolo_leaderboardinvites.pilot_id
+where
+evesolo_leaderboardkills.leaderboard_id=%d
+and evesolo_solokill.points_awarded>0
+and evesolo_leaderboardinvites.status='ACCEPTED'
+group by evesolo_pilot.name
+order by c desc
+'''
 
+sql_leaderboard_ships_seen_count='''select evesolo_ccpid.ccp_id,evesolo_ship.name,count(*) as c,evesolo_ship.id from evesolo_ship
+		inner join evesolo_solokill on (
+										 (evesolo_solokill.winners_ship_id=evesolo_ship.id
+                                     	 )
+                                     		or
+                                     	 (evesolo_solokill.losers_ship_id=evesolo_ship.id
+                                     	 )
+                                      )
+		inner join evesolo_ccpid on evesolo_ccpid.id=evesolo_ship.CCPID_id
+		inner join evesolo_leaderboardkills on evesolo_solokill.id=evesolo_leaderboardkills.solokill_id
+		where evesolo_leaderboardkills.leaderboard_id=%d
+		and evesolo_solokill.points_awarded>0.0
+		group by evesolo_ship.name
+		order by c desc
+		limit 5'''
 
+sql_leaderboard_winning_ship_counts='''select evesolo_ccpid.ccp_id,evesolo_ship.name,count(*) as c,evesolo_ship.id from evesolo_ship
+		inner join evesolo_solokill on evesolo_solokill.winners_ship_id=evesolo_ship.id
+		inner join evesolo_ccpid on evesolo_ccpid.id=evesolo_ship.CCPID_id
+		inner join evesolo_leaderboardkills on evesolo_solokill.id=evesolo_leaderboardkills.solokill_id
+		where evesolo_leaderboardkills.leaderboard_id=%d
+		and evesolo_solokill.points_awarded>0.0
+		group by evesolo_ship.name
+		order by c desc
+		limit 5'''
+		
+sql_leaderboard_losing_ship_counts='''select evesolo_ccpid.ccp_id,evesolo_ship.name,count(*) as c,evesolo_ship.id from evesolo_ship
+		inner join evesolo_solokill on evesolo_solokill.losers_ship_id=evesolo_ship.id
+		inner join evesolo_ccpid on evesolo_ccpid.id=evesolo_ship.CCPID_id
+		inner join evesolo_leaderboardkills on evesolo_solokill.id=evesolo_leaderboardkills.solokill_id
+		where evesolo_leaderboardkills.leaderboard_id=%d
+		and evesolo_solokill.points_awarded>0.0
+		group by evesolo_ship.name
+		order by c desc
+		limit 5'''

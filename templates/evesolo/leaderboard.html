@@ -2,12 +2,15 @@
 {% block content %}
 {% if rank_sets %}
 	{% if header_title %}
-	<h1>{{header_title|safe}}</h1>
+		<h1>{{header_title|safe}}</h1>
 		{% else %}{% if html_title %}
-		{{html_title|safe}}
+			{{html_title|safe}}
 		{% endif %}
 	{% endif %}
-	
+	{% if leaderboard %}
+	<ul><li><h2><a href="/leaderboard_stats/{{leaderboard.id}}/">View Stats</a></h2>
+	</li></ul>
+	{% endif %}
 	{% if include_verify %}
 		{% if verified %}
 		<h2>Verified kills only</h2>

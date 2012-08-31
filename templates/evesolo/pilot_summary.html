@@ -116,22 +116,24 @@
 										Points
 										{% endif %}
 				</td>
-				<td class="leaderboard"><table class="leaderboardpaneltable">
+				<td class="leaderboard">
+					<table >
 						<tr>
-							<td class="leaderboard" width="33%"></td>
-							<td class="leaderboard" width="33%">{{points}}</td>
-							<td class="leaderboard" width="33%"></td>
+							<td class="leaderboard" width="189px"></td>
+							<td class="leaderboard" width="189px">{{points}}</td>
+							<td class="leaderboard" width="189px"></td>
 						</tr>
-					</table></td>
+					</table>
+				</td>
 			</tr>
 			<tr id="tr_dark">
 				<td class="leaderboard">Wins - Losses</td>
 				<td class="leaderboard">
-					<table class="leaderboardpaneltable">
+					<table >
 						<tr>
-							<td class="leaderboard" width="33%"></td>
-							<td class="leaderboard" width="33%">{{winloss}}</td>
-							<td class="leaderboard" width="33%"></td>
+							<td class="leaderboard" width="189px"></td>
+							<td class="leaderboard" width="189px">{{winloss}}</td>
+							<td class="leaderboard" width="189px"></td>
 						</tr>
 					</table>
 				</td>
@@ -139,12 +141,12 @@
 			<tr id="tr_light">
 				<td class="leaderboard">Most Wins In Class</td>
 				<td class="leaderboard">
-					<table class="leaderboardpaneltable">
+					<table >
 						<tr>
-							<td class="leaderboard" width="33%">{% if bestclassid != 0 %}<a href="/leaderboards_class/{{bestclassid}}/">{{bestclass}}</a>
+							<td class="leaderboard" width="189px">{% if bestclassid != 0 %}<a href="/leaderboards_class/{{bestclassid}}/">{{bestclass}}</a>
 																{% else %}{{bestclass}}{% endif %}</td>
-							<td class="leaderboard" width="33%">{{bestclasswins}} wins</td>
-							<td class="leaderboard" width="33%">{{bestclasswinspoints}} points</td>
+							<td class="leaderboard" width="189px">{{bestclasswins}} wins</td>
+							<td class="leaderboard" width="189px">{{bestclasswinspoints}} points</td>
 						</tr>
 					</table>				
 				</td>
@@ -152,12 +154,12 @@
 			<tr id="tr_dark">
 				<td class="leaderboard">Most Wins With Ship</td>
 				<td class="leaderboard">
-					<table class="leaderboardpaneltable">
+					<table >
 						<tr>
-							<td class="leaderboard" width="33%">{% if bestshipid != 0 %}<a href="/leaderboards_ship/{{bestshipid}}/">{{bestship}}</a>
+							<td class="leaderboard" width="189px">{% if bestshipid != 0 %}<a href="/leaderboards_ship/{{bestshipid}}/">{{bestship}}</a>
 																{% else %}{{bestship}}{% endif %}</td>
-							<td class="leaderboard" width="33%">{{bestshipwins}} wins</td>
-							<td class="leaderboard" width="33%">{{bestshipwinspoints}} points</td>
+							<td class="leaderboard" width="189px">{{bestshipwins}} wins</td>
+							<td class="leaderboard" width="189px">{{bestshipwinspoints}} points</td>
 						</tr>
 					</table>
 				</td>
@@ -172,15 +174,15 @@
 	<div class="leaderboardpanelinner">
 		<table class="leaderboardpaneltable">
 			<tr class="boardheader">
-				<td class="leaderboard" width="33%">Ship</td>
-				<td class="leaderboard" width="33%">Name</td>
-				<td class="leaderboard" width="33%">Seen in # fights</td>
+				<td class="leaderboard">Ship</td>
+				<td class="leaderboard">Name</td>
+				<td class="leaderboard">Seen in # fights</td>
 			</tr>
 			{% for ccpid,name,count,shipid in most_seen_ships %}
 			<tr id="{% cycle 'tr_light' 'tr_dark' %}">
-				<td class="leaderboard" width="33%"><img src="http://image.eveonline.com/Render/{{ccpid}}_32.png"/></td>
-				<td class="leaderboard" width="33%"><a href="/leaderboards_ship/{{shipid}}/">{{name}}</a></td>
-				<td class="leaderboard" width="33%">{{count}}</td>
+				<td class="leaderboard"><img src="http://image.eveonline.com/Render/{{ccpid}}_32.png"/></td>
+				<td class="leaderboard"><a href="/leaderboards_ship/{{shipid}}/">{{name}}</a></td>
+				<td class="leaderboard">{{count}}</td>
 			</tr>
 			{% endfor %}
 		</table>

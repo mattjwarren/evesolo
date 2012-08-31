@@ -1,28 +1,31 @@
 <div id="smoothmenu1" class="ddsmoothmenu">
 <ul>
-	<li><a href="/kills/">Latest Kills</a></li>
-	<li><a href="#">Evesolo</a>
+	<li><a href="#">View</a>
 		<ul>
+			<li><a href="/">Recent Activity</a></li>
 			<li><a href="/leaderboards_summary/">Evesolo Board</a></li>
-			<li><a href="/leaderboards_shipclassindex/">Class/Ship Index</a></li>
 			<li><a href="/ship_stats/">Ship Stats</a></li>
+			<li><a href="/leaderboards_shipclassindex/">Class/Ship Boards</a></li>
 		</ul>
 	</li>
 	<li><a href="#">Search</a>
 		<ul>
 			<li><a href="/search/">Pilots</a></li>
 			<li><a href="/board_search/">Leaderboards</a></li>
+			<li><a href="#">Alliances (soon)</a></li>
+			<li><a href="#">Corps (soon)</a></li>
 		</ul>
 	</li>
 	<li><a href="http://eve-solo.blogspot.com/">Blog</a></li>
 	{% if user.is_authenticated %}
 	<li><a href="#">Your</a>
 		<ul>
+			<li><a href="#">Profile (soon)</a></li>
 			<li><a href="/accounts/profile">Players / Pilots</a></li>
-			<li><a href="/accounts/manage_boards/">Leaderboards</a></li>
+			<li><a href="/accounts/manage_boards/">Custom Boards</a></li>
+			<li><a href="/accounts/manage_kills/">Kills</a></li>
 		</ul>
 	</li>
-	<li><a href="/accounts/manage_kills/">Enter Kills</a>	
 	<li><a href="/accounts/logout/">Logout</a></li>
 	{% else %}
 	<li><a href="/accounts/login/">Login</a></li>

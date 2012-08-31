@@ -194,5 +194,6 @@ label {
 	background-color: #0C0C0C;
 }
 
-.leaderboardpaneltable { width: 100%; }
+.leaderboardpaneltable { /*width: 100%; */
+						width: 820px }
 

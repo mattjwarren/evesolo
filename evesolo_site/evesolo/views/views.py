@@ -786,9 +786,13 @@ def pilot(request,pilot_id,board_id,verified=False):
 		if leaderboard.rank_style=='KILLS':
 			sql=sql_custom_ranking_nolimit_kills
 			sql_interval=sql_custom_ranking_interval_nolimit_kills
-		else:
+		elif leaderboard.rank_style=='POINTS':
 			sql=sql_custom_ranking_nolimit_points
 			sql_interval=sql_custom_ranking_interval_nolimit_points
+		elif leaderboard.rank_style=='DAMAGE':
+			sql=sql_custom_ranking_nolimit_damage
+			sql_interval=sql_custom_ranking_interval_nolimit_damage
+			
 
 		
 		
@@ -1166,6 +1170,7 @@ def manage_kills(request):
 		not_allowed_friendly=0
 		already_entered=0
 		kills_not_verified=0
+		not_allowed_general=0
 		too_old=0
 		for solokill_id in solokills_to_add:
 			try:
@@ -1205,6 +1210,7 @@ def manage_kills(request):
 			#is kill leaderboard restricted by Friends / competitors?
 			friendly_allowed=board_to_enter.allow_friendly_kills
 			competitor_allowed=board_to_enter.allow_leaderboard_kills
+			outsider_allowed=board_to_enter.allow_outsider_kills
 			
 			losing_pilot=solokill.losing_pilot
 			looser_alliance=losing_pilot.alliance
@@ -1214,6 +1220,8 @@ def manage_kills(request):
 			else:
 				looser_friendly=(looser_alliance==pilot_to_add.alliance) or (looser_corp==pilot_to_add.corp)
 			looser_competitor=Leaderboardinvites.objects.filter(leaderboard=board_to_enter,pilot=losing_pilot).count()>0
+			looser_general=not looser_competitor
+			
 			
 			#if looser is a competitor, and competitors are not allowed, then refuse regardless sof friendly status
 			if (looser_competitor) and (not competitor_allowed):
@@ -1221,6 +1229,9 @@ def manage_kills(request):
 				continue
 			if (looser_friendly) and (not friendly_allowed):
 				not_allowed_friendly+=1
+				continue
+			if (looser_general) and (not outsider_allowed):
+				not_allowed_general+=1
 				continue
 			
 			#does the kill already exist
@@ -1258,6 +1269,8 @@ def manage_kills(request):
 				error_list.append('%d Refused, not verified.' % kills_not_verified)
 			if too_old>0:
 				error_list.append('%d Refused, kills are too old.' % too_old)
+			if not_allowed_general>0:
+				error_list.append('%d Refused, General kills not allowed.' % not_allowed_general)
 			if added_count:
 				context['message'].append('...%d Succesfully entered.') % added_count
 			context['error']='</br>'.join(error_list)

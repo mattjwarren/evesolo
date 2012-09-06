@@ -32,6 +32,7 @@
 			<option value="{{leaderboard.rank_style}}">{{leaderboard.rank_style}}</option>
 			<option value="Points">Points</option>
 			<option value="Kills">Kills</option>
+			<option value="Kills">Damage</option>
 			</select>
 		</td>
 		<td></td>
@@ -87,6 +88,12 @@
 		<td><input type="checkbox" name="allow_competitor_kills" {% if leaderboard.allow_leaderboard_kills %}checked{% else %} empty {% endif %} value="True" id="id_allow_competitor_kills" /></td>
 		<td></td>
 	</tr>
+	<tr>
+		<td><label for="id_allow_outsider_kills">Allow General Kills<br/>(kills against Joe Public):</label></td>
+		<td><input type="checkbox" name="allow_outsider_kills" {% if leaderboard.allow_outsider_kills%}checked{% else %} empty {% endif %} value="True" id="id_allow_outsider_kills" /></td>
+		<td></td>
+	</tr>
+
 	<tr>
 		<td></td>
 		<td><button type="submit" name="Update" value="{{leaderboard.id}}" class="default">Update</button>

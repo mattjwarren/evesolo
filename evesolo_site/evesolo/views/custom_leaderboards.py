@@ -122,6 +122,10 @@ def custom_board_stats(request,board_id):
         context['allow_competitor_kills']='Yes'
     else:
         context['allow_competitor_kills']='No'
+    if leaderboard.allow_outsider_kills==1:
+        context['allow_outsider_kills']='Yes'
+    else:
+        context['allow_outsider_kills']='No'
     
     context['registered_pilots_count']=registered_pilots_count
     context['active_pilots_count']=active_pilots_count
@@ -524,6 +528,9 @@ def edit_board(request,board_id):
     competitor_kills_allowed=False
     if 'allow_competitor_kills' in request.POST:
         competitor_kills_allowed=request.POST['allow_competitor_kills']=='True'
+    outsider_kills_allowed=False
+    if 'allow_outsider_kills' in request.POST:
+        outsider_kills_allowed=request.POST['allow_outsider_kills']=='True'
         
     
     #Its a good one, lets make the changes
@@ -576,6 +583,10 @@ def edit_board(request,board_id):
         leaderboard_to_edit.allow_leaderboard_kills=1
     else:
         leaderboard_to_edit.allow_leaderboard_kills=0    
+    if outsider_kills_allowed:
+        leaderboard_to_edit.allow_outsider_kills=1
+    else:
+        leaderboard_to_edit.allow_outsider_kills=0    
 
     save_object(leaderboard_to_edit,request)
     
@@ -648,7 +659,7 @@ def delete_board(request,board_id):
     return HttpResponseRedirect(reverse('evesolo.views.manage_boards'))
 
 
-valid_ranking_methods=['POINTS','KILLS']
+valid_ranking_methods=['POINTS','KILLS','DAMAGE']
 @login_required
 def add_leaderboard(request):
     manage_boards_context=get_managed_boards_context(request)
@@ -713,7 +724,9 @@ def add_leaderboard(request):
     competitor_kills_allowed=False
     if 'allow_competitor_kills' in request.POST:
         competitor_kills_allowed=request.POST['allow_competitor_kills']=='True'    
-    
+    outsider_kills_allowed=False
+    if 'allow_outsider_kills' in request.POST:
+        outsider_kills_allowed=request.POST['allow_outsider_kills']=='True'    
     
     #Check the leaderboard is not asociated with another player
     leaderboard=get_or_create_leaderboard(name=leaderboard_name,manager=managing_player)
@@ -744,6 +757,10 @@ def add_leaderboard(request):
         leaderboard.allow_leaderboard_kills=1
     else:
         leaderboard.allow_leaderboard_kills=0
+    if outsider_kills_allowed:
+        leaderboard.allow_outsider_kills=1
+    else:
+        leaderboard.allow_outsider_kills=0
         
         
     save_object(leaderboard,request)

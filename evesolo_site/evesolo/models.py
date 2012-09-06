@@ -99,7 +99,7 @@ class Droppeditems(models.Model):
 	item_dropped=models.ForeignKey(Item)
 	count=models.IntegerField()
 
-	def __unicode__(self):	
+	def __unicode__(self):
 		return 'Dropped items: for solokill: %d' % self.solokill.id
 		
 #Tables for leaderboard implemetation
@@ -111,8 +111,10 @@ class Leaderboard(models.Model):
 	rank_style=models.CharField(max_length=14)
 	player=models.ForeignKey(Player,null=False)
 	description=models.CharField(max_length=512)
+	#..should bcome 'permissions' table etc..?
 	allow_friendly_kills=models.IntegerField(null=False,default=0)
 	allow_leaderboard_kills=models.IntegerField(null=False,default=0)
+	allow_outsider_kills=models.IntegerField(null=False,default=1)
 	start_date=models.DateTimeField(null=False,auto_now_add=True)
 	def __unicode__(self):
 		return '%s managed by player %s' % (self.name, self.player.name)

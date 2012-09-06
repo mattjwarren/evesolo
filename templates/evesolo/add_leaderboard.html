@@ -26,6 +26,7 @@
 		<td><select name="leaderboard_style" id="id_leaderboard_style">
 			<option value="Points">Points</option>
 			<option value="Kills">Kills</option>
+			<option value="Kills">Damage</option>
 			</select></td>
 	</tr>
 	<tr>
@@ -71,6 +72,11 @@
 	<tr>
 		<td><label for="id_allow_competitor_kills">Allow Competitor Kills<br/>(overrides allow friendly):</label></td>
 		<td><input type="checkbox" name="allow_competitor_kills" {% if competitor_kills_allowed %}checked{% else %} empty {% endif %} value="True" id="id_allow_competitor_kills" /></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td><label for="id_allow_outsider_kills">Allow General Kills<br/>(kills against Joe Public):</label></td>
+		<td><input type="checkbox" name="allow_outsider_kills" checked value="True" id="id_allow_outsider_kills" /></td>
 		<td></td>
 	</tr>
 	<tr>

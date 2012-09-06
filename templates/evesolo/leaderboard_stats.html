@@ -55,7 +55,7 @@
 				</td>
 			</tr>
 			<tr id="tr_dark">
-				<td class="leaderboard">Allowed Hulls</td>
+				<td class="leaderboard">Allowed Hull Classes</td>
 				<td  class="leaderboard"><ul>
 						{% for allowed in allowed_shiptypes %}
 						<li>{{allowed.name}}</li>
@@ -67,7 +67,7 @@
 				<td class="leaderboard">Allowed Ships</td>
 				<td  class="leaderboard"><ul>
 						{% for allowed in allowed_ships %}
-						<li>allowed.name</li>
+						<li>{{allowed.name}}</li>
 						{% endfor %}
 					</ul>
 				</td>
@@ -102,6 +102,43 @@
 		</table>
 	</div>
 </div>
+
+<h2>Highest Damage Kills</h2>
+<div class="leaderboardpanel">
+	<div class="leaderboardpanelinner">
+		<table class="leaderboardpaneltable">
+			<tr class="boardheader"><td>Victor</td><td>Ship Flown</td><td>Victim</td><td>Ship Flown</td><td>Kill Class</td><td>Points</td><td>Date</td><td>Damage</td><td></td></tr>
+			{% for kill in highest_damage_kills %}
+			<tr id="{% cycle 'tr_light' 'tr_dark' %}">
+				<td class="leaderboard"><a href="/pilot/{{kill.winning_pilot.id}}/">{{kill.winning_pilot.name}}</a></td>
+				<td class="leaderboard">
+					<table>
+						<tr>
+							<td><img src="http://image.eveonline.com/Render/{{kill.winners_ship.CCPID.ccp_id}}_32.png"></img></td>
+							<td><a href="/leaderboards_ship/{{kill.winners_ship.id}}/">{{kill.winners_ship.name}}</a></td>
+						</tr>
+					</table>
+				</td>
+				<td class="leaderboard"><a href="/pilot/{{kill.losing_pilot.id}}/">{{kill.losing_pilot.name}}</a></td>
+				<td class="leaderboard">
+					<table>
+						<tr>
+							<td><img src="http://image.eveonline.com/Render/{{kill.losers_ship.CCPID.ccp_id}}_32.png"></img></td>
+							<td><a href="/leaderboards_ship/{{kill.losers_ship.id}}/">{{kill.losers_ship.name}}</a></td>
+						</tr>
+					</table>
+				</td>
+				<td class="leaderboard"><a href="/leaderboards_class/{{kill.winners_ship.hull_class.id}}/">{{kill.winners_ship.hull_class.human_name}}</a></td>
+				<td class="leaderboard">{{kill.points_awarded}}</td>
+				<td class="leaderboard">{{kill.kill_date|date:"j-n-Y H:i"}}</td>
+				<td class="leaderboard">{{kill.damage}}</td>
+				<td class="leaderboard"><a href="/kills/{{kill.id}}/">View</a></td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+</div>
+
 <h2>Most Wins by Ship</h2>
 <div class="leaderboardpanel">
 	<div class="leaderboardpanelinner">
@@ -109,13 +146,13 @@
 			<tr class="boardheader">
 				<td class="leaderboard" width="33%">Ship</td>
 				<td class="leaderboard" width="33%">Name</td>
-				<td class="leaderboard" width="33%">Wins / Losses</td>
+				<td class="leaderboard" width="33%">Wins</td>
 			</tr>
-			{% for ccpid,name,shipid in most_winning_ships %}
+			{% for ccpid,name,count,shipid in most_winning_ships %}
 			<tr id="{% cycle 'tr_light' 'tr_dark' %}">
 				<td class="leaderboard" width="33%"><img src="http://image.eveonline.com/Render/{{ccpid}}_32.png"/></td>
 				<td class="leaderboard" width="33%"><a href="/leaderboards_ship/{{shipid}}/">{{name}}</a></td>
-				<td class="leaderboard" width="33%">{{shipid}}</td>
+				<td class="leaderboard" width="33%">{{count}}</td>
 			</tr>
 			{% endfor %}
 		</table>
@@ -128,13 +165,13 @@
 			<tr class="boardheader">
 				<td class="leaderboard" width="33%">Ship</td>
 				<td class="leaderboard" width="33%">Name</td>
-				<td class="leaderboard" width="33%">Wins / Losses</td>
+				<td class="leaderboard" width="33%">Losses</td>
 			</tr>
-			{% for ccpid,name,shipid in least_winning_ships %}
+			{% for ccpid,name,count,shipid in least_winning_ships %}
 			<tr id="{% cycle 'tr_light' 'tr_dark' %}">
 				<td class="leaderboard" width="33%"><img src="http://image.eveonline.com/Render/{{ccpid}}_32.png"/></td>
 				<td class="leaderboard" width="33%"><a href="/leaderboards_ship/{{shipid}}/">{{name}}</a></td>
-				<td class="leaderboard" width="33%">{{shipid}}</td>
+				<td class="leaderboard" width="33%">{{count}}</td>
 			</tr>
 			{% endfor %}
 		</table>

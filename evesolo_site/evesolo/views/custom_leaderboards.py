@@ -85,6 +85,7 @@ def custom_board_stats(request,board_id):
     total_kill_points=sum([ kill.solokill.points_awarded for kill in kills])
     total_damage_done=sum([ kill.solokill.damage for kill in kills])
     
+    
     if len(pilots_by_activity_rows)<5:
         most_active_pilots_rows=pilots_by_activity_rows
     else:
@@ -96,7 +97,16 @@ def custom_board_stats(request,board_id):
     context={}
     context['most_winning_ships']=get_sql_rows(sql_leaderboard_winning_ship_counts % leaderboard.id)
     context['least_winning_ships']=get_sql_rows(sql_leaderboard_losing_ship_counts % leaderboard.id)
+
     
+    highest_damage_leaderboardkills=Leaderboardkills.objects.filter(leaderboard=leaderboard).order_by('-solokill__damage')[:5]
+    context['highest_damage_kills']=[]
+    [ context['highest_damage_kills'].append(kill.solokill) for kill in highest_damage_leaderboardkills ]
+        
+        
+    from sys import stderr
+    stderr.write("higest damage kills "+str(context['highest_damage_kills']))
+    stderr.flush()
     context['allowed_alliances']=Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard,type='ALLIANCE')
     context['allowed_corps']=Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard,type='CORP')
     context['allowed_pilots']=Leaderboardallowedparticipants.objects.filter(leaderboard=leaderboard,type='PILOT')
@@ -297,16 +307,16 @@ def join_board(request):
     #check any restrictions if the board has them
     
     allowed_alliances=Leaderboardallowedparticipants.objects.filter(leaderboard=board_to_join,type='ALLIANCE')
-    allowed_alliances=[ aa.name for aa in allowed_alliances ]
-    in_alliance=joining_pilot.alliance in allowed_alliances
+    allowed_alliances=[ aa.name.lower() for aa in allowed_alliances ]
+    in_alliance=joining_pilot.alliance.lower() in allowed_alliances
     
     allowed_corps=Leaderboardallowedparticipants.objects.filter(leaderboard=board_to_join,type='CORP')
-    allowed_corps=[ aa.name for aa in allowed_corps ]
-    in_corp=joining_pilot.corp in allowed_corps
+    allowed_corps=[ aa.name.lower() for aa in allowed_corps ]
+    in_corp=joining_pilot.corp.lower() in allowed_corps
 
     allowed_pilots=Leaderboardallowedparticipants.objects.filter(leaderboard=board_to_join,type='PILOT')
-    allowed_pilots=[ aa.name for aa in allowed_pilots ]
-    in_pilots=joining_pilot.name in allowed_pilots
+    allowed_pilots=[ aa.name.lower() for aa in allowed_pilots ]
+    in_pilots=joining_pilot.name.lower() in allowed_pilots
     
     if not (in_alliance or in_corp or in_pilots):
         manage_boards_context=get_managed_boards_context(request)

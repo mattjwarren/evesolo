@@ -1243,14 +1243,24 @@ def manage_kills(request):
 				leaderboard_kill=Leaderboardkills(leaderboard=board_to_enter,solokill=solokill)
 				save_object(leaderboard_kill,request)
 				added_count+=1
+
+
+
+
+
+
+
+
+
+
 			
 			
 		error_list=[]
-		not_allowed=not_allowed_competitor+not_allowed_friendly+already_entered+kills_not_verified+too_old+not_invited+ship_restrictions+bad_pilots
+		not_allowed=not_allowed_competitor+not_allowed_friendly+already_entered+kills_not_verified+too_old+not_invited+ship_restrictions+bad_pilots+not_allowed_general
 		
 		context['message']=[]
 		if not_allowed==0:
-			context['message']='All kills succesfully entered.' % (added_count,len(solokills_to_add))
+			context['message']='All kills succesfully entered.'
 		elif not_allowed>0:
 			if not_allowed_competitor:
 				error_list.append('%d Refused, competitor kills not allowed.' % not_allowed_competitor)

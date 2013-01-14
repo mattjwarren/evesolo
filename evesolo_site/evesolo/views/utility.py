@@ -65,7 +65,7 @@ def update_attributes_with_keys(something=None,values={}):
             old_value=getattr(something,attribute)
             new_value=values[attribute]
             ##check for string representations of integers
-            if (type(old_value) is type(1)) and (type(new_value) is type('')):
+            if (type(old_value) is int) and (type(new_value) is str):
                 try:
                     new_value=int(new_value)
                 except ValueError:

@@ -212,23 +212,5 @@ LOGGING = {
 	}
 }
 
-if not (TEST or DEV):
-	EMAIL_HOST='smtp.gmail.com'
-	EMAIL_PORT=587
-	EMAIL_HOST_USER='yellowalienbaby@gmail.com'
-	EMAIL_HOST_PASSWORD='thingstreory'
-	EMAIL_USE_TLS=True
-else:
-	if TEST:
-		EMAIL_HOST='smtp.gmail.com'
-		EMAIL_PORT=587
-		EMAIL_HOST_USER='yellowalienbaby@gmail.com'
-		EMAIL_HOST_PASSWORD='thingstreory'
-		EMAIL_USE_TLS=True
-	elif DEV:
-		EMAIL_HOST='smtp.gmail.com'
-		EMAIL_PORT=587
-		EMAIL_HOST_USER='yellowalienbaby@gmail.com'
-		EMAIL_HOST_PASSWORD='thingstreory'
-		EMAIL_USE_TLS=True
+
 
